@@ -1,0 +1,23 @@
+{
+    "label": "Corelight Chronicle",
+    "category_label": "Models",
+    "branding": {
+        "image_uri": "<>",
+        "tagline": "Explore, analyze and visualize Corelight Chronicle data in Looker."
+    },
+    "constants": {
+        "CONNECTION_NAME": {
+            "label": "Connection Name",
+            "value_constraint": "connection"
+        },
+        "CHRONICLE_URL": {
+            "label": "Chronicle URL"
+        }
+    },
+    "models": [
+        {
+            "name": "corelight-chronicle",
+            "connection_constant": "CONNECTION_NAME"
+        }
+    ]
+}
