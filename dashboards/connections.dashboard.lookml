@@ -51,10 +51,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
@@ -108,10 +108,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
@@ -165,10 +165,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
@@ -222,10 +222,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
@@ -300,10 +300,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
@@ -379,10 +379,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
@@ -453,10 +453,10 @@
     defaults_version: 1
     listen:
       Time Range: events.event_timestamp_time
-      Originator IP (id_orig_h): events.principal__ip__filter
-      Originator Port (id_orig_p): events.principal__port__filter
-      Responder IP (id_resp_h): events.target__ip__filter
-      Responder Port (id_resp_p): events.target__port__filter
+      Source IP: events.principal__ip__filter
+      Source Port: events.principal__port__filter
+      Destination IP: events.target__ip__filter
+      Destination Port: events.target__port__filter
       Service: events.about__labels__service__filter
       Event Type: events.metadata__product_event_type
       Corelight Sensor: events.observer__hostname__filter
