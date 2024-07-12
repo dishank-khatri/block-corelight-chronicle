@@ -164,6 +164,11 @@ view: events {
       ELSE 'Not Expired'
       END;;
   }
+  #Security Posture - Expiring Certs.
+  dimension: cert_day_to_expire {
+    type: number
+    sql: ROUND((UNIX_SECONDS(TIMESTAMP(${cert_not_valid_after})) - UNIX_SECONDS(TIMESTAMP(FORMAT_TIMESTAMP("%Y-%m-%dT%H:%M:%SZ",CURRENT_TIMESTAMP(),"UTC")))) / 86400, 0) ;;
+  }
 
   dimension: external_link {
     sql: "link" ;;
@@ -1439,6 +1444,18 @@ view: events {
     sql: ${TABLE}.network.tls.version ;;
     group_label: "Network Tls"
     group_item_label: "Version"
+  }
+  #ssl
+  dimension: version_status {
+    type: string
+    sql: CASE
+            WHEN ${network__tls__version} = 'TLSv13' THEN 'Most Secure'
+            WHEN ${network__tls__version} = 'TLSv12' THEN 'Secure'
+            WHEN ${network__tls__version} = 'DTLSv12' THEN 'Secure'
+            WHEN ${network__tls__version} = 'unknown-64282' THEN 'Unknown'
+            ELSE "Old Version"
+         END
+    ;;
   }
   dimension: network__tls__version_protocol {
     type: string
@@ -31058,6 +31075,49 @@ view: events {
     }
   }
 
+  measure: metadata_id_count {
+    type: count
+  }
+
+  measure: formatted_metadata_id_count {
+    type: string
+    sql:
+    CASE
+        WHEN ${metadata_id_count} > 999 THEN
+            CASE
+                WHEN ROUND(${metadata_id_count}/1000)*1000 = ${metadata_id_count} THEN CONCAT(CAST(ROUND(${metadata_id_count}/1000) AS STRING), 'K')
+                WHEN MOD(${metadata_id_count}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${metadata_id_count}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${metadata_id_count}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${metadata_id_count} AS STRING)
+    END;;
+  }
+
+  #Security Posture - Telnet Sessions
+  measure: talnet_session_count {
+    type: string
+    sql:${formatted_metadata_id_count};;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.port=23 {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - FTP Sessions
+  measure: ftp_session_count {
+    type: string
+    sql:${formatted_metadata_id_count};;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.port=23 {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  measure: unencrypted_connections_count {
+    type: count_distinct
+    sql: ${events__about__labels__uid.value} ;;
+  }
+
   # ----- Sets of fields for drilling ------
   set: detail {
     fields: [
@@ -54633,6 +54693,10 @@ view: events__about__labels__uid__only {
   }
   dimension: value {
     type: string
+    sql: ${TABLE}.value ;;
+  }
+  measure: distinct_count {
+    type: count_distinct
     sql: ${TABLE}.value ;;
   }
 }
@@ -106185,5 +106249,58 @@ GROUP BY
   }
   dimension: conn_uids {
     sql: ${TABLE}.conn_uids;;
+  }
+}
+
+
+#Security Posture - Self Signed Certs
+view: events__security_result__detection_fields_validation_status {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+#Security Posture - Certs w/ Low Keys
+view: events__about__labels_certificate_key_length {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+  dimension: value_in_integer {
+    type: number
+    sql: SAFE_CAST(${TABLE}.value AS  INT64) ;;
+  }
+}
+
+#Security Posture - Certs w/ Low Keys
+view: events__about__labels_fingerprint {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+#Security Posture - Unencrypted Connections
+view: events__about__labels_viz_stats {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
   }
 }
