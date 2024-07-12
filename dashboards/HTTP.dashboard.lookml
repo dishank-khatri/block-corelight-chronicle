@@ -437,7 +437,7 @@
     listen:
       Time Range: events.event_timestamp_time
       Corelight Sensor: events.observer__hostname
-      HTTP Method (Host Breakdown By HTTP Method): events.network__http__method
+      HTTP Method (For Host Breakdown By HTTP Method): events.network__http__method
       Event Type: events.product_event_type_filter
     row: 20
     col: 0
