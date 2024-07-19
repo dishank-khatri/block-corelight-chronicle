@@ -27313,6 +27313,17 @@ view: events {
     group_label: "Target Location"
     group_item_label: "Country or Region"
   }
+  #Security Posture- Top VPN destinations by Country
+  dimension: target_country_or_region_not_null {
+    type: string
+    sql: CASE
+            WHEN ${TABLE}.target.location.country_or_region IS NOT NULL THEN ${TABLE}.target.location.country_or_region
+            ELSE 'No Country'
+         END
+     ;;
+    group_label: "Target Location"
+    group_item_label: "Not Null Country or Region"
+  }
   dimension: target__location__desk_name {
     type: string
     sql: ${TABLE}.target.location.desk_name ;;
@@ -27360,6 +27371,18 @@ view: events {
     sql: ${TABLE}.target.location.state ;;
     group_label: "Target Location"
     group_item_label: "State"
+  }
+  #Security Posture - Geolocation of DNS Responses
+  dimension: target_location {
+    type: location
+    label: " "
+    sql_latitude: ${target__location__region_latitude} ;;
+    sql_longitude: ${target__location__region_longitude} ;;
+    group_label: "Target Location"
+    group_item_label: "Location"
+    html: <p>Latitude: {{  target__location__region_latitude}}</p>
+                    <p>Longitude: {{ target__location__region_longitude }}</p>
+                    <p>Country: {{ target__location__country_or_region }}</p>;;
   }
   dimension: target__mac {
     hidden: yes
@@ -31109,13 +31132,96 @@ view: events {
     sql:${formatted_metadata_id_count};;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.port=23 {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
-  measure: unencrypted_connections_count {
-    type: count_distinct
-    sql: ${events__about__labels__uid.value} ;;
+  #Security Posture - Unusual Qtypes
+  measure: unusual_qtypes_count {
+    type: count
+    filters: [
+      events__about__labels__qtype_name.value : "ANY, AXFR, IXFR, TXT"
+    ]
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"qtype_name\"] = \"AXFR, IXFR, ANY, TXT\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - Unusual Qtypes
+  measure: unusual_qtypes_percentage {
+    type: string
+    sql: CASE
+            WHEN ${metadata_id_count} > 0 THEN CONCAT(CAST(ROUND(((${unusual_qtypes_count} / ${metadata_id_count} ) * 100)) AS STRING), '%')
+            ELSE '0%'
+         END ;;
+  }
+
+  #Security Posture - Unusual Qtypes
+  measure: unusual_qtypes_count_with_percentage {
+    type: string
+    sql: CASE
+            WHEN ${unusual_qtypes_count} > 1000 THEN CONCAT(CAST(ROUND(${unusual_qtypes_count}/1000) AS STRING), 'K')
+            ELSE CAST(${unusual_qtypes_count} AS STRING)
+        END
+        ;;
+    html: <span>{{ value }}</span>
+          <span style="font-size: 3vh;">{{ unusual_qtypes_percentage }}</span>;;
+  }
+
+  #Security Posture - NXDOMAIN Responses
+  measure: nxdomain_responses_count {
+    type: count
+    filters: [
+      events__about__labels__rcode_name.value : "NXDOMAIN, NO ERROR"
+    ]
+  }
+
+  #Security Posture - NXDOMAIN Responses
+  measure: nxdomain_responses_percentage {
+    type: string
+    sql: CASE
+            WHEN ${metadata_id_count} > 0 THEN CONCAT(CAST(ROUND(((${nxdomain_responses_count} / ${metadata_id_count} ) * 100), 2) AS STRING), '%')
+            ELSE '0%'
+         END ;;
+  }
+
+  #Security Posture - NXDOMAIN Responses
+  measure: nxdomain_responses_with_percentage {
+    type: string
+    sql: CASE
+            WHEN ${nxdomain_responses_count} > 1000 THEN CONCAT(CAST(ROUND(${nxdomain_responses_count}/1000) AS STRING), 'K')
+            ELSE CAST(${nxdomain_responses_count} AS STRING)
+        END
+        ;;
+    html: <span>{{ value }}</span>
+      <span style="font-size: 3vh;">{{ nxdomain_responses_percentage }}</span>;;
+
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN, NO ERROR\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - RDP Authentication Attempts
+  dimension: auth_result {
+    type: string
+    sql: CASE
+            WHEN ${events__about__labels__auth__success.value} = "true" THEN "Success"
+            WHEN ${events__about__labels__auth__success.value} = "false" THEN "Failure"
+         END;;
+  }
+  #Security Posture - RDP Authentication Attempts
+  measure: rdp_authentication_attempts_count {
+    type: number
+    sql: CASE
+            WHEN ${metadata_id_count} IS NOT NULL THEN ${metadata_id_count}
+            ELSE 0
+         END;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
   }
 
   # ----- Sets of fields for drilling ------
@@ -54698,6 +54804,10 @@ view: events__about__labels__uid__only {
   measure: distinct_count {
     type: count_distinct
     sql: ${TABLE}.value ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"viz_stat\"]=\"{{ _filters['events__about__labels_viz_stats.value'] | replace:'\"','' }}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
   }
 }
 view: events__about__labels__fuid__only {

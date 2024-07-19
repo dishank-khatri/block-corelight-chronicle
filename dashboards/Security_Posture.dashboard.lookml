@@ -3,7 +3,7 @@
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
-  preferred_slug: CLGvZ96npTG69GVRR0369F
+  preferred_slug: EoX5ZWvDqNl0DzyAHfj5vR
   elements:
   - title: Self Signed Certs
     name: Self Signed Certs
@@ -433,11 +433,563 @@
     col: 0
     width: 24
     height: 2
+  - title: FTP Sessions
+    name: FTP Sessions
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [events.ftp_session_count]
+    filters:
+      events.metadata__product_event_type: ftp
+    limit: 500
+    column_limit: 50
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    show_view_names: false
+    show_row_numbers: true
+    transpose: false
+    truncate_text: true
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    limit_displayed_rows: false
+    header_text_alignment: left
+    header_font_size: 12
+    rows_font_size: 12
+    defaults_version: 1
+    listen:
+      Sensor: events.observer__hostname
+      Global Time Restriction: events.event_timestamp_time
+    row: 20
+    col: 16
+    width: 8
+    height: 3
+  - title: Top Unencrypted Protocols Used
+    name: Top Unencrypted Protocols Used
+    model: corelight-chronicle
+    explore: events
+    type: looker_area
+    fields: [events.event_timestamp_hour, events__about__labels__service.value, events.metadata_id_count]
+    pivots: [events__about__labels__service.value]
+    fill_fields: [events.event_timestamp_hour]
+    filters:
+      events.metadata__product_event_type: conn
+      events__about__labels__service.value: -ssl,-dns,-tls,-"ssl,http",-"http,ssl"
+    sorts: [events__about__labels__service.value, events.event_timestamp_hour desc]
+    limit: 500
+    column_limit: 50
+    dynamic_fields:
+    - category: table_calculation
+      expression: coalesce(${events.metadata_id_count}, 0)
+      label: Unencrypted Traffic Volume
+      value_format:
+      value_format_name:
+      _kind_hint: measure
+      table_calculation: unencrypted_traffic_volume
+      _type_hint: number
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_view_names: false
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    y_axis_tick_density: default
+    y_axis_tick_density_custom: 5
+    show_x_axis_label: true
+    show_x_axis_ticks: true
+    y_axis_scale_mode: linear
+    x_axis_reversed: false
+    y_axis_reversed: false
+    plot_size_by_field: false
+    trellis: ''
+    stacking: ''
+    limit_displayed_rows: false
+    legend_position: right
+    point_style: none
+    show_value_labels: false
+    label_density: 25
+    x_axis_scale: auto
+    y_axis_combined: true
+    show_null_points: true
+    interpolation: linear
+    show_totals_labels: false
+    show_silhouette: false
+    totals_color: "#808080"
+    x_axis_zoom: true
+    y_axis_zoom: true
+    hidden_series: [events__about__labels__service.value___null - unencrypted_traffic_volume]
+    hidden_fields: [events.metadata_id_count]
+    show_row_numbers: true
+    transpose: false
+    truncate_text: true
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    enable_conditional_formatting: false
+    header_text_alignment: left
+    header_font_size: 12
+    rows_font_size: 12
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    defaults_version: 1
+    hidden_pivots: {}
+    listen:
+      Sensor: events.observer__hostname
+      Global Time Restriction: events.event_timestamp_time
+    row: 23
+    col: 0
+    width: 24
+    height: 6
+  - title: Failed DNS Queries
+    name: Failed DNS Queries
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [events.metadata_id_count]
+    filters:
+      events.metadata__product_event_type: dns
+      events__about__labels__rcode_name.value: SERVFAIL,REFUSED,FORMERR,NOTIMP,NOTAUTH
+    limit: 500
+    column_limit: 50
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    show_view_names: false
+    show_row_numbers: true
+    transpose: false
+    truncate_text: true
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    limit_displayed_rows: false
+    header_text_alignment: left
+    header_font_size: 12
+    rows_font_size: 12
+    defaults_version: 1
+    hidden_pivots: {}
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 31
+    col: 0
+    width: 6
+    height: 3
+  - title: Internal DNS Servers
+    name: Internal DNS Servers
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [numberofinternaldnsservers]
+    filters:
+      events.metadata__product_event_type: dns
+      events.target__port: '53,5353'
+      events__target__ip.events__target__ip: "-NULL"
+    limit: 500
+    column_limit: 50
+    dynamic_fields:
+    - category: measure
+      expression: ''
+      label: NumberOfInternalDnsServers
+      based_on: events__target__ip.events__target__ip
+      _kind_hint: measure
+      measure: numberofinternaldnsservers
+      type: count_distinct
+      _type_hint: number
+    filter_expression: "${events__about__labels__uid__only.value} = ${conn_events_search_derived.conn_uids}"
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    show_view_names: false
+    show_row_numbers: true
+    transpose: false
+    truncate_text: true
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    limit_displayed_rows: false
+    header_text_alignment: left
+    header_font_size: 12
+    rows_font_size: 12
+    hidden_pivots: {}
+    defaults_version: 1
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 34
+    col: 0
+    width: 6
+    height: 3
+  - title: Unusual Qtypes
+    name: Unusual Qtypes
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [events.unusual_qtypes_count_with_percentage]
+    filters:
+      events.metadata__product_event_type: dns
+    limit: 500
+    column_limit: 50
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    show_view_names: false
+    defaults_version: 1
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 37
+    col: 0
+    width: 6
+    height: 3
+  - title: Outbound VPN Connections
+    name: Outbound VPN Connections
+    model: corelight-chronicle
+    explore: events
+    type: looker_line
+    fields: [events.metadata_id_count, events.event_timestamp_hour]
+    fill_fields: [events.event_timestamp_hour]
+    filters:
+      events.metadata__product_event_type: vpn
+    sorts: [events.event_timestamp_hour desc]
+    limit: 500
+    column_limit: 50
+    dynamic_fields:
+    - category: table_calculation
+      expression: coalesce(${events.metadata_id_count}, 0)
+      label: Count
+      value_format:
+      value_format_name:
+      _kind_hint: measure
+      table_calculation: count
+      _type_hint: number
+    filter_expression: "${events__about__labels__uid__only.value} = ${conn_events_search_derived_outbound.conn_uids}"
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_view_names: false
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    y_axis_tick_density: default
+    y_axis_tick_density_custom: 5
+    show_x_axis_label: false
+    show_x_axis_ticks: true
+    y_axis_scale_mode: linear
+    x_axis_reversed: false
+    y_axis_reversed: false
+    plot_size_by_field: false
+    trellis: ''
+    stacking: ''
+    limit_displayed_rows: false
+    legend_position: center
+    point_style: none
+    show_value_labels: false
+    label_density: 25
+    x_axis_scale: auto
+    y_axis_combined: true
+    show_null_points: true
+    interpolation: linear
+    y_axes: [{label: '', orientation: left, series: [{axisId: count, id: count, name: Count}],
+        showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
+        tickDensityCustom: 5, type: linear}]
+    x_axis_label: Hours
+    x_axis_zoom: true
+    y_axis_zoom: true
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    defaults_version: 1
+    hidden_fields: [events.metadata_id_count]
+    hidden_pivots: {}
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 55
+    col: 0
+    width: 24
+    height: 6
+  - name: " (3)"
+    type: text
+    title_text: ''
+    subtitle_text: ''
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:center;">DNS
+      Hygiene</h4>
+
+      '
+    row: 29
+    col: 0
+    width: 24
+    height: 2
+  - name: " (4)"
+    type: text
+    title_text: ''
+    subtitle_text: ''
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:center;">Remote
+      Management Hygiene</h4>
+
+      '
+    row: 43
+    col: 0
+    width: 24
+    height: 2
+  - title: RDP Authentication Attempts
+    name: RDP Authentication Attempts
+    model: corelight-chronicle
+    explore: events
+    type: looker_line
+    fields: [events.event_timestamp_hour, events.auth_result, events.rdp_authentication_attempts_count]
+    pivots: [events.auth_result]
+    fill_fields: [events.event_timestamp_hour]
+    filters:
+      events.metadata__product_event_type: rdp
+      events__about__labels__auth__success.value: "-NULL"
+    sorts: [events.auth_result, events.event_timestamp_hour desc]
+    limit: 500
+    column_limit: 50
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_view_names: false
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    y_axis_tick_density: default
+    y_axis_tick_density_custom: 5
+    show_x_axis_label: false
+    show_x_axis_ticks: true
+    y_axis_scale_mode: linear
+    x_axis_reversed: false
+    y_axis_reversed: false
+    plot_size_by_field: false
+    trellis: ''
+    stacking: ''
+    limit_displayed_rows: false
+    legend_position: center
+    point_style: circle_outline
+    show_value_labels: false
+    label_density: 25
+    x_axis_scale: auto
+    y_axis_combined: true
+    show_null_points: false
+    interpolation: linear
+    y_axes: [{label: '', orientation: left, series: [{axisId: count, id: count, name: Count}],
+        showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
+        tickDensityCustom: 5, type: linear}]
+    x_axis_label: Hours
+    x_axis_zoom: true
+    y_axis_zoom: true
+    series_colors:
+      Failure - count: "#EA4335"
+      Success - count: "#06b20e"
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    defaults_version: 1
+    hidden_fields: []
+    hidden_pivots: {}
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 61
+    col: 0
+    width: 24
+    height: 7
+  - title: NXDOMAIN Responses
+    name: NXDOMAIN Responses
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [events.nxdomain_responses_with_percentage]
+    filters:
+      events.metadata__product_event_type: dns
+    limit: 500
+    column_limit: 50
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    defaults_version: 1
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 40
+    col: 0
+    width: 6
+    height: 3
+  - title: Geolocation of DNS Responses
+    name: Geolocation of DNS Responses
+    model: corelight-chronicle
+    explore: events
+    type: looker_google_map
+    fields: [events.target_location, events.metadata_id_count]
+    filters:
+      events.metadata__product_event_type: dns
+      events.target__location__region_latitude: not 0
+      events.target__location__region_longitude: not 0
+    sorts: [events.metadata_id_count desc 0]
+    limit: 500
+    column_limit: 50
+    dynamic_fields:
+    - category: table_calculation
+      expression: coalesce(${events.metadata_id_count}, 0)
+      label: Count
+      value_format:
+      value_format_name:
+      _kind_hint: measure
+      table_calculation: count
+      _type_hint: number
+    hidden_fields: [events.metadata_id_count]
+    hidden_points_if_no: []
+    series_labels: {}
+    show_view_names: true
+    map_plot_mode: points
+    heatmap_gridlines: false
+    heatmap_gridlines_empty: false
+    heatmap_opacity: 0.5
+    show_region_field: true
+    draw_map_labels_above_data: true
+    map_tile_provider: light
+    map_position: fit_data
+    map_pannable: true
+    map_zoomable: true
+    map_marker_type: icon
+    map_marker_icon_name: default
+    map_marker_radius_mode: proportional_value
+    map_marker_units: meters
+    map_marker_proportional_scale_type: linear
+    map_marker_color_mode: fixed
+    map_marker_color: ["#24963f"]
+    show_legend: true
+    quantize_map_value_colors: false
+    reverse_map_value_colors: false
+    defaults_version: 0
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 31
+    col: 6
+    width: 18
+    height: 12
+  - title: Top VPN destinations by Country
+    name: Top VPN destinations by Country
+    model: corelight-chronicle
+    explore: events
+    type: looker_bar
+    fields: [events.target_country_or_region_not_null, events.metadata_id_count]
+    filters:
+      events.metadata__product_event_type: vpn
+    sorts: [events.metadata_id_count desc]
+    limit: 500
+    column_limit: 50
+    dynamic_fields:
+    - _kind_hint: measure
+      _type_hint: number
+      args:
+      - events.metadata_id_count
+      based_on: events.metadata_id_count
+      calculation_type: percent_of_column_sum
+      category: table_calculation
+      label: Percent of Events Metadata ID Count
+      source_field: events.metadata_id_count
+      table_calculation: percent_of_events_metadata_id_count
+      value_format:
+      value_format_name: percent_0
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_view_names: false
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    y_axis_tick_density: default
+    y_axis_tick_density_custom: 5
+    show_x_axis_label: false
+    show_x_axis_ticks: true
+    y_axis_scale_mode: linear
+    x_axis_reversed: false
+    y_axis_reversed: false
+    plot_size_by_field: false
+    trellis: ''
+    stacking: normal
+    limit_displayed_rows: false
+    legend_position: center
+    point_style: none
+    show_value_labels: false
+    label_density: 25
+    x_axis_scale: auto
+    y_axis_combined: true
+    ordering: none
+    show_null_labels: false
+    show_totals_labels: false
+    show_silhouette: false
+    totals_color: "#808080"
+    y_axes: [{label: '', orientation: bottom, series: [{axisId: events.metadata_id_count,
+            id: events.metadata_id_count, name: Count}, {axisId: percent_of_events_metadata_id_count,
+            id: percent_of_events_metadata_id_count, name: Percent}], showLabels: false,
+        showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
+        type: linear}]
+    x_axis_label: Country
+    x_axis_zoom: true
+    y_axis_zoom: true
+    hide_legend: false
+    series_colors:
+      percent_of_events_metadata_id_count: "#EA4335"
+      events.metadata_id_count: "#7CB342"
+    series_labels:
+      events.metadata_id_count: Count
+      percent_of_events_metadata_id_count: Percent
+    defaults_version: 1
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+    row: 45
+    col: 0
+    width: 24
+    height: 10
   filters:
   - name: Global Time Restriction
     title: Global Time Restriction
     type: field_filter
-    default_value: ''
+    default_value: 24 hour
     allow_multiple_values: true
     required: false
     ui_config:

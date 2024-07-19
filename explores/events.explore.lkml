@@ -1,5 +1,6 @@
 include: "/views/events.view"
 explore: dns {}
+
 explore: events {
   sql_always_where: ${metadata__vendor_name} = "Corelight" ;;
   #SSH_Inferences_derived
@@ -524,7 +525,6 @@ explore: events {
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__disk_usage_data  ON ${events__about__labels__disk_usage_data.key} = "usage_data";;
     relationship: one_to_many
   }
-
   join: events__about__labels__service {
     view_label: "Events: About Labels Services"
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__service ON ${events__about__labels__service.key} = 'service' ;;
