@@ -113,6 +113,49 @@ view: security_result_summary_derived {
   }
 }
 
+view: avg_rtt {
+  derived_table: {
+    sql: SELECT
+          events__network__dns__questions.name  AS questions_name,
+          events__target__ip  AS events__target__ip_events__target__ip,
+          ROUND(AVG(COALESCE(events.network.session_duration.seconds, 0)), 2)  AS events_network__session_duration__seconds
+      FROM datalake.events AS events
+      LEFT JOIN UNNEST(events.about) as events__about
+      LEFT JOIN UNNEST(events.target.ip) as events__target__ip
+      LEFT JOIN UNNEST(events.network.dns.questions) as events__network__dns__questions
+      WHERE events.metadata.product_event_type = "dns" AND metadata.vendor_name = "Corelight" AND
+      {% condition time_derived %} TIMESTAMP_SECONDS(events.metadata.event_timestamp.seconds) {% endcondition %} AND
+      {% condition sensor_name_derived %} (events.observer.hostname) {% endcondition %}
+      GROUP BY
+          1,
+          2
+      ORDER BY
+          1
+      LIMIT 500;;
+  }
+  filter: time_derived {
+    type: date_time
+  }
+  filter: sensor_name_derived {
+    type: string
+  }
+  dimension: Query {
+    type: string
+    sql: ${TABLE}.questions_name ;;
+  }
+  dimension: Responder {
+    type: string
+    sql: ${TABLE}.events__target__ip_events__target__ip ;;
+  }
+  dimension: avg_rtt {
+    type: number
+    sql: ${TABLE}.events_network__session_duration__seconds ;;
+  }
+  measure: count {
+    type: count
+  }
+}
+
 view: events {
   sql_table_name: `@{EVENTS}`;;
   dimension_group: event_time {
@@ -1199,6 +1242,10 @@ view: events {
     sql: ${TABLE}.network.session_duration.seconds ;;
     group_label: "Network Session Duration"
     group_item_label: "Seconds"
+  }
+  measure: average_time {
+    type: average
+    sql: ${TABLE}.network.session_duration.seconds ;;
   }
   dimension: network__session_id {
     type: string
@@ -27266,6 +27313,21 @@ view: events {
     group_label: "Target"
     group_item_label: "IP"
   }
+  dimension: ip_classification {
+    type: string
+    sql: CASE
+      WHEN ${events__about__labels__uid__only.value} = ${conn_events_search_derived.conn_uids} THEN 'Internal'
+      WHEN ${events__about__labels__uid__only.value} = ${conn_events_search_derived_outbound.conn_uids} THEN 'External'
+    END;;
+  }
+  dimension: Internal {
+    type: string
+    sql: CASE
+      WHEN ${ip_classification} = 'Internal' THEN 'Yes'
+      WHEN ${ip_classification} = 'External' THEN 'No'
+    END;;
+
+  }
   dimension: target__ip_geo_artifact {
     hidden: yes
     sql: ${TABLE}.target.ip_geo_artifact ;;
@@ -27337,6 +27399,17 @@ view: events {
     sql: ${TABLE}.target.location.region_longitude ;;
     group_label: "Target Location"
     group_item_label: "Region Longitude"
+  }
+  dimension: target_location {
+    type: location
+    label: " "
+    sql_latitude: ${target__location__region_latitude} ;;
+    sql_longitude: ${target__location__region_longitude} ;;
+    group_label: "Target Location"
+    group_item_label: "Location"
+    html: <p>Latitude: {{  target__location__region_latitude}}</p>
+                    <p>Longitude: {{ target__location__region_longitude }}</p>
+                    <p>Country: {{ target__location__country_or_region }}</p>;;
   }
   dimension: target__location__state {
     type: string
@@ -31056,6 +31129,84 @@ view: events {
       label: "View in Chronicle"
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"cpu_1_temperature\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
+  }
+
+  measure: metadata_id_count {
+    type: count
+  }
+
+  measure: formatted_metadata_id_count {
+    type: string
+    sql:
+    CASE
+        WHEN ${metadata_id_count} > 999 THEN
+            CASE
+                WHEN ROUND(${metadata_id_count}/1000)*1000 = ${metadata_id_count} THEN CONCAT(CAST(ROUND(${metadata_id_count}/1000) AS STRING), 'K')
+                WHEN MOD(${metadata_id_count}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${metadata_id_count}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${metadata_id_count}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${metadata_id_count} AS STRING)
+    END;;
+  }
+
+  #Name Resolutio Insights - Unusual Qtypes
+  measure: unusual_qtypes_count {
+    type: string
+    sql: ${formatted_metadata_id_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"qtype_name\"]=\"AXFR\" OR about.labels[\"qtype_name\"]=\"IXFR\" OR about.labels[\"qtype_name\"]=\"ANY\" OR about.labels[\"qtype_name\"]=\"TXT\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Name Resolutions Insights - Unusual Query Types found
+  measure: unusual_qtypes_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"qtype_name\"]=\"{{events__about__labels__qtype_name.value}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Name Resolutio Insights - NXDOMAIN Responses
+  measure: nxdomain_responses_count {
+    type: string
+    sql: ${formatted_metadata_id_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Name Resolutions Insights - Network Evidence for NXDOMAIN Responses
+  measure: nxdomain_responses_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND network.dns.questions.name=\"{{ events__network__dns__questions.name}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Name Resolution Insights - Failed DNS Queries
+  measure: failed_dns_queries_count {
+    type: string
+    sql: ${formatted_metadata_id_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"rcode_name\"] = \"SERVFAIL\" OR about.labels[\"rcode_name\"] = \"REFUSED\" OR about.labels[\"rcode_name\"] = \"FORMERR\" OR about.labels[\"rcode_name\"] = \"NOTIMP\" OR about.labels[\"rcode_name\"] = \"NOTAUTH\") {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Name Resolutions Insights - Network Evidence for Failed DNS Queries
+  measure: failed_dns_queries_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"rcode_name\"]=\"{{events__about__labels__rcode_name.value}}\" AND network.dns.questions.name=\"{{ events__network__dns__questions.name}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
 
   # ----- Sets of fields for drilling ------
@@ -38537,6 +38688,24 @@ view: events__target__ip {
   #     url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip}}\" AND network.http.method=\"{{events.network__http__method}}\" AND target.url=\"{{events.target__url}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
   #   }
   # }
+  # Add a measure to count events based on target IP
+  measure: responding_dns_servers_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND target.ip=\"{{events__target__ip}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+  # Name Resolution Insights - Responding DNS Servers
+  measure: responding_dns_servers_count {
+    type: count_distinct
+    sql: ${events__target__ip} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"  {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
 }
 
 view: events__src__nat_ip {
@@ -106121,7 +106290,7 @@ LEFT JOIN UNNEST(events.about) as events__about
 LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
 LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
 LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
-WHERE (events.network.application_protocol = 2000) AND (events.metadata.product_event_type ) = 'conn' AND (CASE
+WHERE (events.metadata.product_event_type ) = 'conn' AND (CASE
           WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'true' THEN 'Internal'
           WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'false' THEN 'External'
           WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'false' THEN 'Inbound'
@@ -106148,7 +106317,7 @@ view: conn_events_search_derived_outbound {
       LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
       LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
       LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
-      WHERE (events.network.application_protocol = 2000) AND (events.metadata.product_event_type ) = 'conn' AND (CASE
+      WHERE (events.metadata.product_event_type ) = 'conn' AND (CASE
                 WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'true' THEN 'Internal'
                 WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'false' THEN 'External'
                 WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'false' THEN 'Inbound'
@@ -106185,5 +106354,47 @@ GROUP BY
   }
   dimension: conn_uids {
     sql: ${TABLE}.conn_uids;;
+  }
+}
+
+# Name Resolution Insights - DNS Query Volume Over Time
+view: dns_query_volume_over_time {
+  derived_table: {
+    sql:SELECT
+    events__about__labels__uid__only.value  AS conn_uids,
+    events.network.sent_bytes  AS events_conn_network__sent_bytes
+FROM `datalake.events` AS events
+LEFT JOIN UNNEST(events.about) as events__about
+LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
+WHERE (events.metadata.product_event_type ) = 'conn' AND (events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL
+GROUP BY
+    1, 2
+ORDER BY
+    1;;
+  }
+  dimension: conn_uids {
+    sql: ${TABLE}.conn_uids;;
+  }
+  dimension: formatted_traffic {
+    sql: ${TABLE}.events_conn_network__sent_bytes;;
+  }
+  measure: orig_bytes_sum {
+    type: sum
+    sql: ${formatted_traffic}  ;;
+  }
+  measure: dns_query_volume_count {
+    type: string
+    sql:
+      CASE
+        WHEN ${orig_bytes_sum} >= (1024 * 1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/(1024 * 1024 * 1024 * 1024), 2) AS STRING), ' TB')
+        WHEN ${orig_bytes_sum} >= (1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/(1024 * 1024 * 1024), 2) AS STRING), ' GB')
+        WHEN ${orig_bytes_sum} >= (1024 * 1024) THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/(1024 * 1024), 2) AS STRING), ' MB')
+        WHEN ${orig_bytes_sum} >= 1024 THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/1024, 2) AS STRING), ' KB')
+        ELSE '0 B'
+    END;;
+    link: {
+      label: "View in chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.product_event_type=\"conn\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"  {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
   }
 }

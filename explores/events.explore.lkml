@@ -1,5 +1,6 @@
 include: "/views/events.view"
 explore: dns {}
+explore: avg_rtt {}
 explore: events {
   sql_always_where: ${metadata__vendor_name} = "Corelight" ;;
   #SSH_Inferences_derived
@@ -524,7 +525,6 @@ explore: events {
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__disk_usage_data  ON ${events__about__labels__disk_usage_data.key} = "usage_data";;
     relationship: one_to_many
   }
-  
   join: events__about__labels__service {
     view_label: "Events: About Labels Services"
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__service ON ${events__about__labels__service.key} = 'service' ;;
@@ -745,6 +745,13 @@ explore: events {
     sql: LEFT JOIN UNNEST(${events__security_result.detection_fields}) as events__security_result__detection_fields_severity_level ON ${events__security_result__detection_fields_severity_level.key} = 'severity_level' ;;
     fields: [events__security_result__detection_fields_severity_level.value]
     relationship: one_to_many
+  }
+  #Name resolution Insighs
+  join: dns_query_volume_over_time {
+    view_label: "DNS query volume over time"
+    type: left_outer
+    sql_on: ${events__about__labels__uid__only.value} = ${conn_events_search_derived.conn_uids} ;;
+    relationship: one_to_one
   }
   #data-exploration
   join: conn_events_search_derived {
