@@ -47,6 +47,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 2
     col: 0
     width: 8
@@ -92,6 +93,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 2
     col: 8
     width: 8
@@ -138,6 +140,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 2
     col: 16
     width: 8
@@ -199,7 +202,7 @@
             id: encrypted_traffic_volume_1, name: Encrypted Traffic Volume}], showLabels: false,
         showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
         type: linear}]
-    x_axis_label: Hours
+    x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
     defaults_version: 1
@@ -207,6 +210,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 11
     col: 0
     width: 24
@@ -265,6 +269,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 5
     col: 0
     width: 12
@@ -296,7 +301,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: true
+    show_x_axis_label: false
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -316,6 +321,11 @@
     show_totals_labels: false
     show_silhouette: false
     totals_color: "#808080"
+    y_axes: [{label: '', orientation: left, series: [{axisId: count, id: count, name: Count}],
+        showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
+        tickDensityCustom: 5, type: linear}]
+    x_axis_zoom: true
+    y_axis_zoom: true
     hidden_pivots: {}
     defaults_version: 1
     value_labels: legend
@@ -323,6 +333,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 5
     col: 12
     width: 12
@@ -332,7 +343,7 @@
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [events__about__labels__uid__only.distinct_count]
+    fields: [events__about__labels__uid__only.unencrypted_connections_count]
     filters:
       events.metadata__product_event_type: '"etc_viz"'
       events__about__labels_viz_stats.value: C,Cc
@@ -364,6 +375,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 20
     col: 0
     width: 8
@@ -405,6 +417,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 20
     col: 8
     width: 8
@@ -413,32 +426,32 @@
     type: text
     title_text: ''
     subtitle_text: ''
-    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:center;">Encrypted
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">Encrypted
       Traffic Hygiene</h4>
 
       '
     row: 0
     col: 0
-    width: 24
+    width: 19
     height: 2
   - name: " (2)"
     type: text
     title_text: ''
     subtitle_text: ''
-    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:center;">Unencrypted
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">Unencrypted
       Traffic Hygiene - Indicators</h4>
 
       '
     row: 18
     col: 0
-    width: 24
+    width: 19
     height: 2
   - title: FTP Sessions
     name: FTP Sessions
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [events.ftp_session_count]
+    fields: [events__about__labels__uid__only.ftp_session_count]
     filters:
       events.metadata__product_event_type: ftp
     limit: 500
@@ -468,6 +481,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 20
     col: 16
     width: 8
@@ -495,6 +509,7 @@
       _kind_hint: measure
       table_calculation: unencrypted_traffic_volume
       _type_hint: number
+    filter_expression: matches_filter(${events__about__labels__service.value}, `-NULL`)
     x_axis_gridlines: false
     y_axis_gridlines: true
     show_view_names: false
@@ -502,7 +517,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: true
+    show_x_axis_label: false
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -522,6 +537,30 @@
     show_totals_labels: false
     show_silhouette: false
     totals_color: "#808080"
+    y_axes: [{label: '', orientation: left, series: [{axisId: unencrypted_traffic_volume,
+            id: dce_rpc - unencrypted_traffic_volume, name: dce_rpc}, {axisId: unencrypted_traffic_volume,
+            id: dhcp - unencrypted_traffic_volume, name: dhcp}, {axisId: unencrypted_traffic_volume,
+            id: 'gssapi,krb,smb,dce_rpc - unencrypted_traffic_volume', name: 'gssapi,krb,smb,dce_rpc'},
+          {axisId: unencrypted_traffic_volume, id: 'gssapi,smb - unencrypted_traffic_volume',
+            name: 'gssapi,smb'}, {axisId: unencrypted_traffic_volume, id: 'gssapi,smb,krb
+              - unencrypted_traffic_volume', name: 'gssapi,smb,krb'}, {axisId: unencrypted_traffic_volume,
+            id: http - unencrypted_traffic_volume, name: http}, {axisId: unencrypted_traffic_volume,
+            id: krb_tcp - unencrypted_traffic_volume, name: krb_tcp}, {axisId: unencrypted_traffic_volume,
+            id: 'krb,smb,gssapi - unencrypted_traffic_volume', name: 'krb,smb,gssapi'},
+          {axisId: unencrypted_traffic_volume, id: 'krb,smb,gssapi,dce_rpc - unencrypted_traffic_volume',
+            name: 'krb,smb,gssapi,dce_rpc'}, {axisId: unencrypted_traffic_volume,
+            id: 'ntlm,gssapi,smb - unencrypted_traffic_volume', name: 'ntlm,gssapi,smb'},
+          {axisId: unencrypted_traffic_volume, id: ntp - unencrypted_traffic_volume,
+            name: ntp}, {axisId: unencrypted_traffic_volume, id: smb - unencrypted_traffic_volume,
+            name: smb}, {axisId: unencrypted_traffic_volume, id: 'smb,gssapi - unencrypted_traffic_volume',
+            name: 'smb,gssapi'}, {axisId: unencrypted_traffic_volume, id: 'smb,gssapi,krb
+              - unencrypted_traffic_volume', name: 'smb,gssapi,krb'}, {axisId: unencrypted_traffic_volume,
+            id: spicy_ipsec_ike_udp - unencrypted_traffic_volume, name: spicy_ipsec_ike_udp},
+          {axisId: unencrypted_traffic_volume, id: spicy_stun - unencrypted_traffic_volume,
+            name: spicy_stun}, {axisId: unencrypted_traffic_volume, id: ssh - unencrypted_traffic_volume,
+            name: ssh}], showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
+        tickDensityCustom: 5, type: linear}]
+    x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
     hidden_series: [events__about__labels__service.value___null - unencrypted_traffic_volume]
@@ -544,6 +583,7 @@
     listen:
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
+      Namespace: events.observer__namespace
     row: 23
     col: 0
     width: 24
@@ -552,11 +592,13 @@
     name: Failed DNS Queries
     model: corelight-chronicle
     explore: events
-    type: single_value
-    fields: [events.metadata_id_count]
+    type: corelight-chronicle::single_value_custom_viz
+    fields: [events.event_timestamp_hour, events.failed_dns_queries]
+    fill_fields: [events.event_timestamp_hour]
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: SERVFAIL,REFUSED,FORMERR,NOTIMP,NOTAUTH
+    sorts: [events.event_timestamp_hour desc]
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -580,15 +622,16 @@
     header_text_alignment: left
     header_font_size: 12
     rows_font_size: 12
-    defaults_version: 1
+    defaults_version: 0
     hidden_pivots: {}
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
+      Namespace: events.observer__namespace
     row: 31
     col: 0
     width: 6
-    height: 3
+    height: 5
   - title: Internal DNS Servers
     name: Internal DNS Servers
     model: corelight-chronicle
@@ -637,18 +680,22 @@
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 34
-    col: 0
+      Namespace: events.observer__namespace
+    row: 31
+    col: 18
     width: 6
-    height: 3
+    height: 5
   - title: Unusual Qtypes
     name: Unusual Qtypes
     model: corelight-chronicle
     explore: events
-    type: single_value
-    fields: [events.unusual_qtypes_count_with_percentage]
+    type: corelight-chronicle::single_value_custom_viz
+    fields: [events.event_timestamp_hour, events.unusual_qtypes_count]
+    fill_fields: [events.event_timestamp_hour]
     filters:
       events.metadata__product_event_type: dns
+      events__about__labels__qtype_name.value: AXFR,IXFR,ANY,TXT
+    sorts: [events.event_timestamp_hour desc]
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -661,14 +708,15 @@
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
     show_view_names: false
-    defaults_version: 1
+    defaults_version: 0
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 37
-    col: 0
+      Namespace: events.observer__namespace
+    row: 31
+    col: 6
     width: 6
-    height: 3
+    height: 5
   - title: Outbound VPN Connections
     name: Outbound VPN Connections
     model: corelight-chronicle
@@ -681,15 +729,6 @@
     sorts: [events.event_timestamp_hour desc]
     limit: 500
     column_limit: 50
-    dynamic_fields:
-    - category: table_calculation
-      expression: coalesce(${events.metadata_id_count}, 0)
-      label: Count
-      value_format:
-      value_format_name:
-      _kind_hint: measure
-      table_calculation: count
-      _type_hint: number
     filter_expression: "${events__about__labels__uid__only.value} = ${conn_events_search_derived_outbound.conn_uids}"
     x_axis_gridlines: false
     y_axis_gridlines: true
@@ -708,19 +747,22 @@
     stacking: ''
     limit_displayed_rows: false
     legend_position: center
-    point_style: none
+    point_style: circle_outline
     show_value_labels: false
     label_density: 25
     x_axis_scale: auto
     y_axis_combined: true
-    show_null_points: true
+    show_null_points: false
     interpolation: linear
-    y_axes: [{label: '', orientation: left, series: [{axisId: count, id: count, name: Count}],
-        showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
-        tickDensityCustom: 5, type: linear}]
-    x_axis_label: Hours
+    y_axes: [{label: Count, orientation: left, series: [{axisId: events.metadata_id_count,
+            id: events.metadata_id_count, name: Metadata ID Count}], showLabels: false,
+        showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
+        type: linear}]
+    x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
+    series_labels:
+      events.metadata_id_count: Count
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -731,12 +773,13 @@
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
     defaults_version: 1
-    hidden_fields: [events.metadata_id_count]
+    hidden_fields:
     hidden_pivots: {}
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 55
+      Namespace: events.observer__namespace
+    row: 58
     col: 0
     width: 24
     height: 6
@@ -744,25 +787,25 @@
     type: text
     title_text: ''
     subtitle_text: ''
-    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:center;">DNS
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">DNS
       Hygiene</h4>
 
       '
     row: 29
     col: 0
-    width: 24
+    width: 19
     height: 2
   - name: " (4)"
     type: text
     title_text: ''
     subtitle_text: ''
-    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:center;">Remote
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">Remote
       Management Hygiene</h4>
 
       '
-    row: 43
+    row: 46
     col: 0
-    width: 24
+    width: 19
     height: 2
   - title: RDP Authentication Attempts
     name: RDP Authentication Attempts
@@ -826,7 +869,8 @@
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 61
+      Namespace: events.observer__namespace
+    row: 64
     col: 0
     width: 24
     height: 7
@@ -834,10 +878,13 @@
     name: NXDOMAIN Responses
     model: corelight-chronicle
     explore: events
-    type: single_value
-    fields: [events.nxdomain_responses_with_percentage]
+    type: corelight-chronicle::single_value_custom_viz
+    fields: [events.event_timestamp_hour, events.nxdomain_responses]
+    fill_fields: [events.event_timestamp_hour]
     filters:
       events.metadata__product_event_type: dns
+      events__about__labels__rcode_name.value: "-NXDOMAIN,-NOERROR"
+    sorts: [events.event_timestamp_hour desc]
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -849,20 +896,22 @@
     enable_conditional_formatting: false
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
-    defaults_version: 1
+    defaults_version: 0
+    hidden_pivots: {}
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 40
-    col: 0
+      Namespace: events.observer__namespace
+    row: 31
+    col: 12
     width: 6
-    height: 3
+    height: 5
   - title: Geolocation of DNS Responses
     name: Geolocation of DNS Responses
     model: corelight-chronicle
     explore: events
     type: looker_google_map
-    fields: [events.target_location, events.metadata_id_count]
+    fields: [events.metadata_id_count, events__target__ip_geo_artifact.target_location]
     filters:
       events.metadata__product_event_type: dns
       events.target__location__region_latitude: not 0
@@ -882,7 +931,7 @@
     hidden_fields: [events.metadata_id_count]
     hidden_points_if_no: []
     series_labels: {}
-    show_view_names: true
+    show_view_names: false
     map_plot_mode: points
     heatmap_gridlines: false
     heatmap_gridlines_empty: false
@@ -907,20 +956,22 @@
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 31
-    col: 6
+      Namespace: events.observer__namespace
+    row: 36
+    col: 0
     width: 18
-    height: 12
+    height: 10
   - title: Top VPN destinations by Country
     name: Top VPN destinations by Country
     model: corelight-chronicle
     explore: events
     type: looker_bar
-    fields: [events.target_country_or_region_not_null, events.metadata_id_count]
+    fields: [events.metadata_id_count, events__target__ip_geo_artifact.location__country_or_region]
     filters:
       events.metadata__product_event_type: vpn
+      events__target__ip_geo_artifact.location__country_or_region: "-NULL"
     sorts: [events.metadata_id_count desc]
-    limit: 500
+    limit: 10
     column_limit: 50
     dynamic_fields:
     - _kind_hint: measure
@@ -972,19 +1023,123 @@
     y_axis_zoom: true
     hide_legend: false
     series_colors:
-      percent_of_events_metadata_id_count: "#EA4335"
-      events.metadata_id_count: "#7CB342"
+      percent_of_events_metadata_id_count: "#ffa600"
+      events.metadata_id_count: "#1a53ff"
+      events.country_count_percentage: "#00b7c7"
     series_labels:
       events.metadata_id_count: Count
       percent_of_events_metadata_id_count: Percent
+      events.country_count_percentage: Percent
     defaults_version: 1
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
-    row: 45
+      Namespace: events.observer__namespace
+    row: 48
     col: 0
     width: 24
     height: 10
+  - title: ''
+    name: " (5)"
+    model: corelight-chronicle
+    explore: events
+    type: looker_grid
+    fields: [events__target__ip_geo_artifact.target_country_or_region_not_null, events.metadata_id_count]
+    filters:
+      events.metadata__product_event_type: dns
+    sorts: [events.metadata_id_count desc 0]
+    limit: 500
+    column_limit: 50
+    show_view_names: false
+    show_row_numbers: true
+    transpose: false
+    truncate_text: true
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    limit_displayed_rows: false
+    enable_conditional_formatting: false
+    header_text_alignment: left
+    header_font_size: '12'
+    rows_font_size: '12'
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    x_axis_gridlines: false
+    y_axis_gridlines: true
+    show_y_axis_labels: true
+    show_y_axis_ticks: true
+    y_axis_tick_density: default
+    y_axis_tick_density_custom: 5
+    show_x_axis_label: true
+    show_x_axis_ticks: true
+    y_axis_scale_mode: linear
+    x_axis_reversed: false
+    y_axis_reversed: false
+    plot_size_by_field: false
+    trellis: ''
+    stacking: ''
+    legend_position: center
+    point_style: none
+    show_value_labels: false
+    label_density: 25
+    x_axis_scale: auto
+    y_axis_combined: true
+    ordering: none
+    show_null_labels: false
+    show_totals_labels: false
+    show_silhouette: false
+    totals_color: "#808080"
+    defaults_version: 1
+    minimum_column_width: 75
+    show_sql_query_menu_options: false
+    show_totals: true
+    show_row_totals: true
+    truncate_header: false
+    series_labels:
+      events__target__ip_geo_artifact.target_country_or_region_not_null: Country
+      events.metadata_id_count: Count
+    series_column_widths:
+      events__target__ip_geo_artifact.target_country_or_region_not_null: 168
+    series_cell_visualizations:
+      events.metadata_id_count:
+        is_active: false
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+      Namespace: events.observer__namespace
+    row: 36
+    col: 18
+    width: 6
+    height: 10
+  - type: button
+    name: button_1478
+    rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
+    row: 0
+    col: 19
+    width: 5
+    height: 2
+  - type: button
+    name: button_1479
+    rich_content_json: '{"text":"Name Resolution Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
+    row: 29
+    col: 19
+    width: 5
+    height: 2
+  - type: button
+    name: button_1480
+    rich_content_json: '{"text":"Remote Activity Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
+    row: 46
+    col: 19
+    width: 5
+    height: 2
+  - type: button
+    name: button_1481
+    rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
+    row: 18
+    col: 19
+    width: 5
+    height: 2
   filters:
   - name: Global Time Restriction
     title: Global Time Restriction
@@ -1013,3 +1168,17 @@
     explore: events
     listens_to_filters: []
     field: events.observer__hostname
+  - name: Namespace
+    title: Namespace
+    type: field_filter
+    default_value: ''
+    allow_multiple_values: true
+    required: false
+    ui_config:
+      type: tag_list
+      display: popover
+      options: []
+    model: corelight-chronicle
+    explore: events
+    listens_to_filters: []
+    field: events.observer__namespace
