@@ -1,5 +1,6 @@
 include: "/views/events.view"
 explore: dns {}
+
 explore: events {
   sql_always_where: ${metadata__vendor_name} = "Corelight" ;;
   #SSH_Inferences_derived
@@ -524,7 +525,6 @@ explore: events {
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__disk_usage_data  ON ${events__about__labels__disk_usage_data.key} = "usage_data";;
     relationship: one_to_many
   }
-  
   join: events__about__labels__service {
     view_label: "Events: About Labels Services"
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__service ON ${events__about__labels__service.key} = 'service' ;;
@@ -9293,4 +9293,29 @@ explore: events {
     sql: LEFT JOIN UNNEST(${events__extensions__vulns__vulnerabilities__about__process_ancestors.file__pe_file__resources_language_count_str}) as events__extensions__vulns__vulnerabilities__about__process_ancestors__file__pe_file__resources_language_count_str ;;
     relationship: one_to_many
   }
+  join: events__security_result__detection_fields_validation_status {
+    view_label: "Events: Security Result Detection Fields Validation Status"
+    sql: LEFT JOIN UNNEST(${events__security_result.detection_fields}) as events__security_result__detection_fields_validation_status ON ${events__security_result__detection_fields_validation_status.key} = 'validation_status';;
+    fields: [events__security_result__detection_fields_validation_status.value]
+    relationship: one_to_many
+  }
+  join: events__about__labels_certificate_key_length {
+    view_label: "Events: About Labels Certificate Key Length"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels_certificate_key_length ON ${events__about__labels_certificate_key_length.key} = 'certificate_key_length';;
+    fields: [events__about__labels_certificate_key_length.value_in_integer]
+    relationship: one_to_many
+  }
+  join: events__about__labels_fingerprint {
+    view_label: "Events: About Labels Fingerprint"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels_fingerprint ON ${events__about__labels_fingerprint.key} = 'fingerprint';;
+    fields: [events__about__labels_fingerprint.value]
+    relationship: one_to_many
+  }
+  join: events__about__labels_viz_stats {
+    view_label: "Events: About Labels Viz Stat"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels_viz_stats ON ${events__about__labels_viz_stats.key} = 'viz_stat';;
+    fields: [events__about__labels_viz_stats.value]
+    relationship: one_to_many
+  }
+
 }

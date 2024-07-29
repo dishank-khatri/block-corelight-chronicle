@@ -164,6 +164,11 @@ view: events {
       ELSE 'Not Expired'
       END;;
   }
+  #Security Posture - Expiring Certs.
+  dimension: cert_day_to_expire {
+    type: number
+    sql: ROUND((UNIX_SECONDS(TIMESTAMP(${cert_not_valid_after})) - UNIX_SECONDS(TIMESTAMP(FORMAT_TIMESTAMP("%Y-%m-%dT%H:%M:%SZ",CURRENT_TIMESTAMP(),"UTC")))) / 86400, 0) ;;
+  }
 
   dimension: external_link {
     sql: "link" ;;
@@ -1439,6 +1444,18 @@ view: events {
     sql: ${TABLE}.network.tls.version ;;
     group_label: "Network Tls"
     group_item_label: "Version"
+  }
+  #ssl
+  dimension: version_status {
+    type: string
+    sql: CASE
+            WHEN ${network__tls__version} = 'TLSv13' THEN 'Most Secure'
+            WHEN ${network__tls__version} = 'TLSv12' THEN 'Secure'
+            WHEN ${network__tls__version} = 'DTLSv12' THEN 'Secure'
+            WHEN ${network__tls__version} = 'unknown-64282' THEN 'Unknown'
+            ELSE "Old Version"
+         END
+    ;;
   }
   dimension: network__tls__version_protocol {
     type: string
@@ -31058,6 +31075,83 @@ view: events {
     }
   }
 
+  measure: metadata_id_count {
+    type: count
+  }
+
+  measure: formatted_metadata_id_count {
+    type: string
+    sql:
+    CASE
+        WHEN ${metadata_id_count} > 999 THEN
+            CASE
+                WHEN ROUND(${metadata_id_count}/1000)*1000 = ${metadata_id_count} THEN CONCAT(CAST(ROUND(${metadata_id_count}/1000) AS STRING), 'K')
+                WHEN MOD(${metadata_id_count}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${metadata_id_count}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${metadata_id_count}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${metadata_id_count} AS STRING)
+    END;;
+  }
+
+  #Security Posture - Telnet Sessions
+  measure: talnet_session_count {
+    type: string
+    sql:${formatted_metadata_id_count};;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.port=23 {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - Failed DNS Queries
+  measure: failed_dns_queries{
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"rcode_name\"] = \"SERVFAIL\" OR about.labels[\"rcode_name\"] = \"REFUSED\" OR about.labels[\"rcode_name\"] = \"FORMERR\" OR about.labels[\"rcode_name\"] = \"NOTIMP\" OR about.labels[\"rcode_name\"] = \"NOTAUTH\") {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - Unusual Qtypes
+  measure: unusual_qtypes_count {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"qtype_name\"] = \"AXFR\" OR about.labels[\"qtype_name\"] = \"IXFR\" OR about.labels[\"qtype_name\"] = \"ANY\" OR about.labels[\"qtype_name\"] = \"TXT\") {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - NXDOMAIN Responses
+  measure: nxdomain_responses {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"rcode_name\"] != \"NXDOMAIN\" OR about.labels[\"rcode_name\"] != \"NOERROR\") {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - RDP Authentication Attempts
+  dimension: auth_result {
+    type: string
+    sql: CASE
+            WHEN ${events__about__labels__auth__success.value} = 'true' THEN 'Success'
+            WHEN ${events__about__labels__auth__success.value} = 'false' THEN 'Failure'
+            ELSE 'Unknown'
+         END;;
+  }
+  #Security Posture - RDP Authentication Attempts
+  measure: rdp_authentication_attempts_count {
+    type: number
+    sql: CASE
+            WHEN ${metadata_id_count} IS NOT NULL THEN ${metadata_id_count}
+            ELSE 0
+         END;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND {% if auth_result._value == 'Failure' %} about.labels[\"auth_success\"]=\"false\"{% else %} about.labels[\"auth_success\"]=\"true\" {% endif %} {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
   # ----- Sets of fields for drilling ------
   set: detail {
     fields: [
@@ -54635,6 +54729,46 @@ view: events__about__labels__uid__only {
     type: string
     sql: ${TABLE}.value ;;
   }
+
+  measure: distinct_uid_only_count {
+    type: count_distinct
+    sql: ${TABLE}.value;;
+  }
+
+  measure: formatted_uid_only_count {
+    type: string
+    sql:
+    CASE
+        WHEN ${distinct_uid_only_count} > 999 THEN
+            CASE
+                WHEN ROUND(${distinct_uid_only_count}/1000)*1000 = ${distinct_uid_only_count} THEN CONCAT(CAST(ROUND(${distinct_uid_only_count}/1000) AS STRING), 'K')
+                WHEN MOD(${distinct_uid_only_count}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${distinct_uid_only_count}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${distinct_uid_only_count}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${distinct_uid_only_count} AS STRING)
+    END;;
+  }
+
+  #Security Posture - Unencrypted Connections
+  measure: unencrypted_connections_count {
+    type: number
+    sql: ${distinct_uid_only_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"viz_stat\"]=\"C\" OR about.labels[\"viz_stat\"]=\"Cc\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  #Security Posture - FTP Sessions
+  measure: ftp_session_count {
+    type: string
+    sql:${formatted_uid_only_count};;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
 }
 view: events__about__labels__fuid__only {
   dimension: key {
@@ -58336,6 +58470,16 @@ view: events__target__ip_geo_artifact {
     group_label: "Location"
     group_item_label: "Country or Region"
   }
+  #Security Posture- Geolocation of DNS Responses
+  dimension: target_country_or_region_not_null {
+    type: string
+    sql: CASE
+           WHEN ${location__country_or_region} IS NULL THEN 'No Country'
+           ELSE ${location__country_or_region}
+         END ;;
+    group_label: "Location"
+    group_item_label: "Not Null Country or Region"
+  }
   dimension: location__desk_name {
     type: string
     sql: ${TABLE}.location.desk_name ;;
@@ -58377,6 +58521,18 @@ view: events__target__ip_geo_artifact {
     sql: ${TABLE}.location.region_longitude ;;
     group_label: "Location"
     group_item_label: "Region Longitude"
+  }
+  #Security Posture - Geolocation of DNS Responses
+  dimension: target_location {
+    type: location
+    label: " "
+    sql_latitude: ${location__region_latitude} ;;
+    sql_longitude: ${location__region_longitude} ;;
+    group_label: "Location"
+    group_item_label: "Region Location"
+    html: <p>Latitude: {{ location__region_latitude }}</p>
+                    <p>Longitude: {{ location__region_longitude }}</p>
+                    <p>Country: {{ target_country_or_region_not_null }}</p>;;
   }
   dimension: location__state {
     type: string
@@ -106121,7 +106277,7 @@ LEFT JOIN UNNEST(events.about) as events__about
 LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
 LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
 LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
-WHERE (events.network.application_protocol = 2000) AND (events.metadata.product_event_type ) = 'conn' AND (CASE
+WHERE (events.metadata.product_event_type ) = 'conn' AND (CASE
           WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'true' THEN 'Internal'
           WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'false' THEN 'External'
           WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'false' THEN 'Inbound'
@@ -106148,7 +106304,7 @@ view: conn_events_search_derived_outbound {
       LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
       LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
       LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
-      WHERE (events.network.application_protocol = 2000) AND (events.metadata.product_event_type ) = 'conn' AND (CASE
+      WHERE (events.metadata.product_event_type ) = 'conn' AND (CASE
                 WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'true' THEN 'Internal'
                 WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'false' THEN 'External'
                 WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'false' THEN 'Inbound'
@@ -106185,5 +106341,58 @@ GROUP BY
   }
   dimension: conn_uids {
     sql: ${TABLE}.conn_uids;;
+  }
+}
+
+
+#Security Posture - Self Signed Certs
+view: events__security_result__detection_fields_validation_status {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+#Security Posture - Certs w/ Low Keys
+view: events__about__labels_certificate_key_length {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+  dimension: value_in_integer {
+    type: number
+    sql: SAFE_CAST(${TABLE}.value AS  INT64) ;;
+  }
+}
+
+#Security Posture - Certs w/ Low Keys
+view: events__about__labels_fingerprint {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+#Security Posture - Unencrypted Connections
+view: events__about__labels_viz_stats {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
   }
 }
