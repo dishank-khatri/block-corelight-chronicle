@@ -22,7 +22,7 @@
       _type_hint: number
       based_on: events.network__tls__client__server_name
       expression: ''
-      label: Count of Network Tls Client Server Name
+      label: Count of Network TLS Client Server Name
       measure: count_of_network_tls_client_server_name_2
       type: count_distinct
     filter_expression: "${events__about__labels__uid__only.value} = ${conn_events_search_derived.conn_uids}"
