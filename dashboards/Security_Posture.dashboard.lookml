@@ -592,7 +592,7 @@
     name: Failed DNS Queries
     model: corelight-chronicle
     explore: events
-    type: corelight-chronicle::single_value_custom_viz
+    type: corelight-looker::single_value_custom_viz
     fields: [events.event_timestamp_hour, events.failed_dns_queries]
     fill_fields: [events.event_timestamp_hour]
     filters:
@@ -689,7 +689,7 @@
     name: Unusual Qtypes
     model: corelight-chronicle
     explore: events
-    type: corelight-chronicle::single_value_custom_viz
+    type: corelight-looker::single_value_custom_viz
     fields: [events.event_timestamp_hour, events.unusual_qtypes_count]
     fill_fields: [events.event_timestamp_hour]
     filters:
@@ -878,7 +878,7 @@
     name: NXDOMAIN Responses
     model: corelight-chronicle
     explore: events
-    type: corelight-chronicle::single_value_custom_viz
+    type: corelight-looker::single_value_custom_viz
     fields: [events.event_timestamp_hour, events.nxdomain_responses]
     fill_fields: [events.event_timestamp_hour]
     filters:
