@@ -95,7 +95,7 @@
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [events.unusual_qtypes_count]
+    fields: [events.name_resolution_unusual_qtypes_count]
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__qtype_name.value: AXFR,IXFR,ANY,TXT
@@ -773,7 +773,7 @@
     required: false
     ui_config:
       type: dropdown_menu
-      display: popover
+      display: inline
       options: []
     model: corelight-chronicle
     explore: events
