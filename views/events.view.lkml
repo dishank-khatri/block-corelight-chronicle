@@ -125,7 +125,8 @@ view: avg_rtt {
       LEFT JOIN UNNEST(events.network.dns.questions) as events__network__dns__questions
       WHERE events.metadata.product_event_type = "dns" AND metadata.vendor_name = "Corelight" AND
       {% condition time_derived %} TIMESTAMP_SECONDS(events.metadata.event_timestamp.seconds) {% endcondition %} AND
-      {% condition sensor_name_derived %} (events.observer.hostname) {% endcondition %}
+      {% condition sensor_name_derived %} (events.observer.hostname) {% endcondition %} AND
+      {% condition namespace_derived %} (events.observer.namespace) {% endcondition %}
       GROUP BY
           1,
           2
@@ -137,6 +138,9 @@ view: avg_rtt {
     type: date_time
   }
   filter: sensor_name_derived {
+    type: string
+  }
+  filter: namespace_derived {
     type: string
   }
   dimension: Query {
@@ -31207,6 +31211,15 @@ view: events {
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"rcode_name\"]=\"{{events__about__labels__rcode_name.value}}\" AND network.dns.questions.name=\"{{ events__network__dns__questions.name}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Name Resolution Insights - Monitoring Query Types by AVG time
+  measure: monitoring_query_type_by_average_time_count {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
   }
 
   # ----- Sets of fields for drilling ------
@@ -106392,9 +106405,5 @@ ORDER BY
         WHEN ${orig_bytes_sum} >= 1024 THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/1024, 2) AS STRING), ' KB')
         ELSE '0 B'
     END;;
-    link: {
-      label: "View in chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.product_event_type=\"conn\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"  {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
-    }
   }
 }
