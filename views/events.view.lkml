@@ -31236,6 +31236,7 @@ view: events {
     link: {
       label: "View in Chronicle"
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+
     }
   }
 
@@ -106545,6 +106546,7 @@ ORDER BY
     END;;
   }
 }
+
 #Security Posture - Self Signed Certs
 view: events__security_result__detection_fields_validation_status {
   dimension: key {
