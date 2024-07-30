@@ -48,7 +48,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 2
+    row: 4
     col: 0
     width: 8
     height: 3
@@ -94,7 +94,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 2
+    row: 4
     col: 8
     width: 8
     height: 3
@@ -141,7 +141,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 2
+    row: 4
     col: 16
     width: 8
     height: 3
@@ -211,7 +211,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 11
+    row: 13
     col: 0
     width: 24
     height: 7
@@ -270,12 +270,12 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 5
+    row: 7
     col: 0
     width: 12
     height: 6
-  - title: Internal vs External Certificates Use
-    name: Internal vs External Certificates Use
+  - title: Internal TLS Version Profile
+    name: Internal TLS Version Profile
     model: corelight-chronicle
     explore: events
     type: looker_column
@@ -294,6 +294,7 @@
       measure: count
       type: count_distinct
       _type_hint: number
+    filter_expression: "${events__about__labels__uid__only.value}= ${conn_events_search_derived.conn_uids}"
     x_axis_gridlines: false
     y_axis_gridlines: true
     show_view_names: false
@@ -334,7 +335,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 5
+    row: 7
     col: 12
     width: 12
     height: 6
@@ -376,7 +377,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 20
+    row: 22
     col: 0
     width: 8
     height: 3
@@ -418,7 +419,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 20
+    row: 22
     col: 8
     width: 8
     height: 3
@@ -430,7 +431,7 @@
       Traffic Hygiene</h4>
 
       '
-    row: 0
+    row: 2
     col: 0
     width: 19
     height: 2
@@ -442,7 +443,7 @@
       Traffic Hygiene - Indicators</h4>
 
       '
-    row: 18
+    row: 20
     col: 0
     width: 19
     height: 2
@@ -482,7 +483,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 20
+    row: 22
     col: 16
     width: 8
     height: 3
@@ -584,7 +585,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 23
+    row: 25
     col: 0
     width: 24
     height: 6
@@ -628,7 +629,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 31
+    row: 33
     col: 0
     width: 6
     height: 5
@@ -681,7 +682,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 31
+    row: 33
     col: 18
     width: 6
     height: 5
@@ -713,7 +714,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 31
+    row: 33
     col: 6
     width: 6
     height: 5
@@ -779,7 +780,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 58
+    row: 60
     col: 0
     width: 24
     height: 6
@@ -791,7 +792,7 @@
       Hygiene</h4>
 
       '
-    row: 29
+    row: 31
     col: 0
     width: 19
     height: 2
@@ -803,7 +804,7 @@
       Management Hygiene</h4>
 
       '
-    row: 46
+    row: 48
     col: 0
     width: 19
     height: 2
@@ -870,7 +871,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 64
+    row: 66
     col: 0
     width: 24
     height: 7
@@ -902,7 +903,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 31
+    row: 33
     col: 12
     width: 6
     height: 5
@@ -957,7 +958,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 36
+    row: 38
     col: 0
     width: 18
     height: 10
@@ -1035,7 +1036,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 48
+    row: 50
     col: 0
     width: 24
     height: 10
@@ -1108,37 +1109,47 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 36
+    row: 38
     col: 18
     width: 6
     height: 10
   - type: button
-    name: button_1478
+    name: button_1508
     rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 0
+    row: 2
     col: 19
     width: 5
     height: 2
   - type: button
-    name: button_1479
+    name: button_1509
     rich_content_json: '{"text":"Name Resolution Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 29
+    row: 31
     col: 19
     width: 5
     height: 2
   - type: button
-    name: button_1480
+    name: button_1510
     rich_content_json: '{"text":"Remote Activity Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 46
+    row: 48
     col: 19
     width: 5
     height: 2
   - type: button
-    name: button_1481
+    name: button_1511
     rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 18
+    row: 20
     col: 19
     width: 5
+    height: 2
+  - name: " (6)"
+    type: text
+    title_text: ''
+    subtitle_text: ''
+    body_text: <h4 style="font-size:22px; margin-top:30px; font-style:normal;">Current
+      Security Posture with Corelight</h4>
+    row: 0
+    col: 0
+    width: 24
     height: 2
   filters:
   - name: Global Time Restriction
