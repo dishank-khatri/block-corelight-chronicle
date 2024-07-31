@@ -3,7 +3,7 @@
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
-  preferred_slug: tBvEpoqiZziVRJvXMcNzJs
+  preferred_slug: 525ZE28RT6xDtZmaYpsss9
   elements:
   - title: Unusual Query Types found
     name: Unusual Query Types found
@@ -62,34 +62,31 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 6
+    row: 5
     col: 12
     width: 12
     height: 6
   - name: ''
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Unusual DNS query types can indicate
       misconfigurations, experimental features, or potential security threats like
       data exfiltration or tunneling. Analysts should scrutinize such queries for
       anomalies and address identified risks to safeguard network security."}],"id":"vyr30"}]'
     rich_content_json: '{"format":"slate"}'
-    row: 3
+    row: 2
     col: 16
     width: 8
     height: 3
   - name: " (2)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: |
-      <h4 style="font-size:22px; margin-top:30px; font-style:normal;">Insights on Name Resolution (DNS)</h4>
       <h4 style="font-size:22px; margin-top:30px; font-style:normal;">DNS Hygiene</h4>
     row: 0
     col: 0
     width: 24
-    height: 3
+    height: 2
   - title: Unusual Qtypes
     name: Unusual Qtypes
     model: corelight-chronicle
@@ -137,21 +134,20 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 3
+    row: 2
     col: 12
     width: 4
     height: 3
   - name: " (3)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"DNS servers actively responding
       in the network are key to secure operations, translating domain names to IP
       addresses and directing traffic. It also logs the number of queries and unique
       clients interacting with the DNS servers, offering insights into possible rogue
       DNS servers and detecting patterns that may suggest data exfiltration attempts."}]}]'
     rich_content_json: '{"format":"slate"}'
-    row: 3
+    row: 2
     col: 4
     width: 8
     height: 3
@@ -188,7 +184,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 3
+    row: 2
     col: 0
     width: 4
     height: 3
@@ -218,7 +214,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 12
+    row: 11
     col: 0
     width: 4
     height: 3
@@ -303,14 +299,13 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 6
+    row: 5
     col: 0
     width: 12
     height: 6
   - name: " (4)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"High rates of DNS NXDOMAIN responses
       might suggest misconfigured domains, typographical errors in network requests,
       or malicious activities such as DNS reconnaissance. Close examination is advised
@@ -318,7 +313,7 @@
       patterns, validate domain configurations, and check endpoint security for signs
       of malware."}]}]'
     rich_content_json: '{"format":"slate"}'
-    row: 12
+    row: 11
     col: 4
     width: 8
     height: 3
@@ -375,35 +370,33 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 15
+    row: 14
     col: 0
     width: 12
     height: 6
   - name: " (5)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Long DNS query response times may
       indicate network congestion, server performance issues, or potential security
       threats. Timely analysis is crucial for maintaining optimal network performance
       and security. Investigate extended response times by examining server configurations,
       network traffic, and potential external attacks."}]}]'
     rich_content_json: '{"format":"slate"}'
-    row: 12
+    row: 11
     col: 16
     width: 8
     height: 3
   - name: " (6)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Failed DNS queries may point to
       misconfigurations, outdated systems, or security threats such as network infiltration
       or DNS poisoning. Analysts should investigate the sources and patterns of these
       failures to identify and remediate underlying causes, thereby ensuring network
       integrity and security."}]}]'
     rich_content_json: '{"format":"slate"}'
-    row: 21
+    row: 20
     col: 4
     width: 8
     height: 3
@@ -453,7 +446,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 21
+    row: 20
     col: 0
     width: 4
     height: 3
@@ -527,7 +520,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 24
+    row: 23
     col: 0
     width: 12
     height: 6
@@ -585,21 +578,20 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 21
+    row: 20
     col: 12
     width: 4
     height: 3
   - name: " (7)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Monitor total DNS-related network
       traffic in MB/GB. Sudden spikes or unusual patterns could signal configuration
       errors, compromised devices making excessive queries, or potential data exfiltration
       attempts.","fontSize":"14px","backgroundColor":"transparent","color":"hsl(0,
       0%, 0%)"}],"id":"gkb6k"}]'
     rich_content_json: '{"format":"slate"}'
-    row: 21
+    row: 20
     col: 16
     width: 8
     height: 3
@@ -629,7 +621,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -646,10 +638,11 @@
     y_axis_combined: true
     show_null_points: true
     interpolation: linear
-    y_axes: [{label: '', orientation: left, series: [{axisId: count_of_metadata_id,
-            id: count_of_metadata_id, name: Count of Metadata ID}], showLabels: false,
-        showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
-        type: linear}]
+    y_axes: [{label: Count, orientation: left, series: [{axisId: events.monitoring_query_type_by_average_time_count,
+            id: events.monitoring_query_type_by_average_time_count, name: Monitoring
+              Query Type By Average Time Count}], showLabels: true, showValues: true,
+        unpinAxis: false, tickDensity: default, tickDensityCustom: 5, type: linear}]
+    x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
     ordering: none
@@ -663,7 +656,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 24
+    row: 23
     col: 12
     width: 12
     height: 6
@@ -691,7 +684,7 @@
       Global Time Restriction: avg_rtt.time_derived
       Sensor: avg_rtt.sensor_name_derived
       Namespace: avg_rtt.namespace_derived
-    row: 12
+    row: 11
     col: 12
     width: 4
     height: 3
@@ -733,7 +726,7 @@
       Global Time Restriction: avg_rtt.time_derived
       Sensor: avg_rtt.sensor_name_derived
       Namespace: avg_rtt.namespace_derived
-    row: 15
+    row: 14
     col: 12
     width: 12
     height: 6
@@ -741,7 +734,7 @@
   - name: Global Time Restriction
     title: Global Time Restriction
     type: field_filter
-    default_value: ''
+    default_value: 24 hour
     allow_multiple_values: true
     required: false
     ui_config:
