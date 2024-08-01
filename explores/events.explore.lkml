@@ -746,13 +746,6 @@ explore: events {
     fields: [events__security_result__detection_fields_severity_level.value]
     relationship: one_to_many
   }
-  #Name resolution Insighs
-  join: dns_query_volume_over_time {
-    view_label: "DNS query volume over time"
-    type: left_outer
-    sql_on: ${events__about__labels__uid__only.value} = ${conn_events_search_derived.conn_uids} ;;
-    relationship: one_to_one
-  }
   #data-exploration
   join: conn_events_search_derived {
     view_label: "Events: UID with filtered on conn type event which Inbound"

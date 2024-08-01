@@ -27367,6 +27367,24 @@ view: events {
     group_label: "Target"
     group_item_label: "Labels"
   }
+  dimension: formatted_traffic {
+    sql: ${TABLE}.network.sent_bytes;;
+  }
+  measure: sum_of_orig_bytes {
+    type: sum
+    sql: ${formatted_traffic};;
+  }
+  measure: dns_query_volume_count {
+    type: string
+    sql:
+      CASE
+        WHEN ${sum_of_orig_bytes} >= (1024 * 1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/(1024 * 1024 * 1024 * 1024), 2) AS STRING), ' TB')
+        WHEN ${sum_of_orig_bytes} >= (1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/(1024 * 1024 * 1024), 2) AS STRING), ' GB')
+        WHEN ${sum_of_orig_bytes} >= (1024 * 1024) THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/(1024 * 1024), 2) AS STRING), ' MB')
+        WHEN ${sum_of_orig_bytes} >= 1024 THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/1024, 2) AS STRING), ' KB')
+        ELSE '0 B'
+    END;;
+  }
   dimension: target__location__city {
     type: string
     sql: ${TABLE}.target.location.city ;;
@@ -106497,44 +106515,6 @@ GROUP BY
   }
   dimension: conn_uids {
     sql: ${TABLE}.conn_uids;;
-  }
-}
-
-# Name Resolution Insights - DNS Query Volume Over Time
-view: dns_query_volume_over_time {
-  derived_table: {
-    sql:SELECT
-    events__about__labels__uid__only.value  AS conn_uids,
-    events.network.sent_bytes  AS events_conn_network__sent_bytes
-FROM `datalake.events` AS events
-LEFT JOIN UNNEST(events.about) as events__about
-LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
-WHERE (events.metadata.product_event_type ) = 'conn' AND (events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL
-GROUP BY
-    1, 2
-ORDER BY
-    1;;
-  }
-  dimension: conn_uids {
-    sql: ${TABLE}.conn_uids;;
-  }
-  dimension: formatted_traffic {
-    sql: ${TABLE}.events_conn_network__sent_bytes;;
-  }
-  measure: orig_bytes_sum {
-    type: sum
-    sql: ${formatted_traffic}  ;;
-  }
-  measure: dns_query_volume_count {
-    type: string
-    sql:
-      CASE
-        WHEN ${orig_bytes_sum} >= (1024 * 1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/(1024 * 1024 * 1024 * 1024), 2) AS STRING), ' TB')
-        WHEN ${orig_bytes_sum} >= (1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/(1024 * 1024 * 1024), 2) AS STRING), ' GB')
-        WHEN ${orig_bytes_sum} >= (1024 * 1024) THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/(1024 * 1024), 2) AS STRING), ' MB')
-        WHEN ${orig_bytes_sum} >= 1024 THEN CONCAT(CAST(ROUND(${orig_bytes_sum}/1024, 2) AS STRING), ' KB')
-        ELSE '0 B'
-    END;;
   }
 }
 

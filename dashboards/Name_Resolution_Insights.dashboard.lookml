@@ -81,8 +81,7 @@
   - name: " (2)"
     type: text
     title_text: ''
-    body_text: |
-      <h4 style="font-size:22px; margin-top:30px; font-style:normal;">DNS Hygiene</h4>
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal;">DNS Hygiene</h4>'
     row: 0
     col: 0
     width: 24
@@ -529,9 +528,10 @@
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [dns_query_volume_over_time.dns_query_volume_count]
+    fields: [events.dns_query_volume_count]
     filters:
-      events.metadata__product_event_type: dns
+      events.metadata__product_event_type: conn
+      events.network__application_protocol: '3000'
     limit: 500
     column_limit: 50
     dynamic_fields:
@@ -542,7 +542,6 @@
       label: Count of Metadata ID
       measure: count_of_metadata_id
       type: count_distinct
-    filter_expression: "${events__about__labels__uid__only.value} = ${dns_query_volume_over_time.conn_uids}"
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
