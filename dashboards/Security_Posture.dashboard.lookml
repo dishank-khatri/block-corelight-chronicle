@@ -48,7 +48,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 4
+    row: 2
     col: 0
     width: 8
     height: 3
@@ -94,7 +94,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 4
+    row: 2
     col: 8
     width: 8
     height: 3
@@ -141,7 +141,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 4
+    row: 2
     col: 16
     width: 8
     height: 3
@@ -181,7 +181,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -199,7 +199,7 @@
     show_null_points: true
     interpolation: linear
     y_axes: [{label: '', orientation: left, series: [{axisId: encrypted_traffic_volume_1,
-            id: encrypted_traffic_volume_1, name: Encrypted Traffic Volume}], showLabels: false,
+            id: encrypted_traffic_volume_1, name: Encrypted Traffic Volume}], showLabels: true,
         showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
         type: linear}]
     x_axis_label: Time
@@ -211,7 +211,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 13
+    row: 11
     col: 0
     width: 24
     height: 7
@@ -270,7 +270,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 7
+    row: 5
     col: 0
     width: 12
     height: 6
@@ -302,7 +302,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -323,7 +323,7 @@
     show_silhouette: false
     totals_color: "#808080"
     y_axes: [{label: '', orientation: left, series: [{axisId: count, id: count, name: Count}],
-        showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
+        showLabels: true, showValues: true, unpinAxis: false, tickDensity: default,
         tickDensityCustom: 5, type: linear}]
     x_axis_zoom: true
     y_axis_zoom: true
@@ -335,7 +335,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 7
+    row: 5
     col: 12
     width: 12
     height: 6
@@ -377,7 +377,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 22
+    row: 20
     col: 0
     width: 8
     height: 3
@@ -419,7 +419,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 22
+    row: 20
     col: 8
     width: 8
     height: 3
@@ -431,9 +431,9 @@
       Traffic Hygiene</h4>
 
       '
-    row: 2
+    row: 0
     col: 0
-    width: 19
+    width: 18
     height: 2
   - name: " (2)"
     type: text
@@ -443,9 +443,9 @@
       Traffic Hygiene - Indicators</h4>
 
       '
-    row: 20
+    row: 18
     col: 0
-    width: 19
+    width: 18
     height: 2
   - title: FTP Sessions
     name: FTP Sessions
@@ -483,7 +483,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 22
+    row: 20
     col: 16
     width: 8
     height: 3
@@ -518,7 +518,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -559,7 +559,7 @@
             id: spicy_ipsec_ike_udp - unencrypted_traffic_volume, name: spicy_ipsec_ike_udp},
           {axisId: unencrypted_traffic_volume, id: spicy_stun - unencrypted_traffic_volume,
             name: spicy_stun}, {axisId: unencrypted_traffic_volume, id: ssh - unencrypted_traffic_volume,
-            name: ssh}], showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
+            name: ssh}], showLabels: true, showValues: true, unpinAxis: false, tickDensity: default,
         tickDensityCustom: 5, type: linear}]
     x_axis_label: Time
     x_axis_zoom: true
@@ -585,7 +585,7 @@
       Sensor: events.observer__hostname
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
-    row: 25
+    row: 23
     col: 0
     width: 24
     height: 6
@@ -594,12 +594,12 @@
     model: corelight-chronicle
     explore: events
     type: corelight-looker::single_value_custom_viz
-    fields: [events.event_timestamp_hour, events.failed_dns_queries]
-    fill_fields: [events.event_timestamp_hour]
+    fields: [events.failed_dns_queries, events.event_timestamp_date]
+    fill_fields: [events.event_timestamp_date]
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: SERVFAIL,REFUSED,FORMERR,NOTIMP,NOTAUTH
-    sorts: [events.event_timestamp_hour desc]
+    sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -629,7 +629,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 33
+    row: 31
     col: 0
     width: 6
     height: 5
@@ -682,7 +682,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 33
+    row: 31
     col: 18
     width: 6
     height: 5
@@ -714,7 +714,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 33
+    row: 31
     col: 6
     width: 6
     height: 5
@@ -738,7 +738,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -756,9 +756,8 @@
     show_null_points: false
     interpolation: linear
     y_axes: [{label: Count, orientation: left, series: [{axisId: events.metadata_id_count,
-            id: events.metadata_id_count, name: Metadata ID Count}], showLabels: false,
-        showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
-        type: linear}]
+            id: events.metadata_id_count, name: Count}], showLabels: true, showValues: true,
+        unpinAxis: false, tickDensity: default, tickDensityCustom: 5, type: linear}]
     x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
@@ -780,7 +779,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 60
+    row: 58
     col: 0
     width: 24
     height: 6
@@ -792,9 +791,9 @@
       Hygiene</h4>
 
       '
-    row: 31
+    row: 29
     col: 0
-    width: 19
+    width: 18
     height: 2
   - name: " (4)"
     type: text
@@ -804,9 +803,9 @@
       Management Hygiene</h4>
 
       '
-    row: 48
+    row: 46
     col: 0
-    width: 19
+    width: 18
     height: 2
   - title: RDP Authentication Attempts
     name: RDP Authentication Attempts
@@ -829,7 +828,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -846,15 +845,19 @@
     y_axis_combined: true
     show_null_points: false
     interpolation: linear
-    y_axes: [{label: '', orientation: left, series: [{axisId: count, id: count, name: Count}],
-        showLabels: false, showValues: true, unpinAxis: false, tickDensity: default,
-        tickDensityCustom: 5, type: linear}]
-    x_axis_label: Hours
+    y_axes: [{label: Count, orientation: left, series: [{axisId: events.rdp_authentication_attempts_count,
+            id: Failure - events.rdp_authentication_attempts_count, name: Failure},
+          {axisId: events.rdp_authentication_attempts_count, id: Success - events.rdp_authentication_attempts_count,
+            name: Success}], showLabels: true, showValues: true, unpinAxis: false,
+        tickDensity: default, tickDensityCustom: 5, type: linear}]
+    x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
     series_colors:
       Failure - count: "#EA4335"
       Success - count: "#06b20e"
+      Success - events.rdp_authentication_attempts_count: "#00AB49"
+      Failure - events.rdp_authentication_attempts_count: "#dc4e41"
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -871,7 +874,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 66
+    row: 64
     col: 0
     width: 24
     height: 7
@@ -903,7 +906,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 33
+    row: 31
     col: 12
     width: 6
     height: 5
@@ -958,7 +961,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 38
+    row: 36
     col: 0
     width: 18
     height: 10
@@ -994,7 +997,7 @@
     show_y_axis_ticks: true
     y_axis_tick_density: default
     y_axis_tick_density_custom: 5
-    show_x_axis_label: false
+    show_x_axis_label: true
     show_x_axis_ticks: true
     y_axis_scale_mode: linear
     x_axis_reversed: false
@@ -1014,9 +1017,9 @@
     show_totals_labels: false
     show_silhouette: false
     totals_color: "#808080"
-    y_axes: [{label: '', orientation: bottom, series: [{axisId: events.metadata_id_count,
+    y_axes: [{label: Count, orientation: bottom, series: [{axisId: events.metadata_id_count,
             id: events.metadata_id_count, name: Count}, {axisId: percent_of_events_metadata_id_count,
-            id: percent_of_events_metadata_id_count, name: Percent}], showLabels: false,
+            id: percent_of_events_metadata_id_count, name: Percent}], showLabels: true,
         showValues: true, unpinAxis: false, tickDensity: default, tickDensityCustom: 5,
         type: linear}]
     x_axis_label: Country
@@ -1036,7 +1039,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 50
+    row: 48
     col: 0
     width: 24
     height: 10
@@ -1109,47 +1112,37 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 38
+    row: 36
     col: 18
     width: 6
     height: 10
   - type: button
     name: button_1508
     rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 2
-    col: 19
-    width: 5
+    row: 0
+    col: 18
+    width: 6
     height: 2
   - type: button
     name: button_1509
     rich_content_json: '{"text":"Name Resolution Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 31
-    col: 19
-    width: 5
+    row: 29
+    col: 18
+    width: 6
     height: 2
   - type: button
     name: button_1510
     rich_content_json: '{"text":"Remote Activity Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 48
-    col: 19
-    width: 5
+    row: 46
+    col: 18
+    width: 6
     height: 2
   - type: button
     name: button_1511
     rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":""}'
-    row: 20
-    col: 19
-    width: 5
-    height: 2
-  - name: " (6)"
-    type: text
-    title_text: ''
-    subtitle_text: ''
-    body_text: <h4 style="font-size:22px; margin-top:30px; font-style:normal;">Current
-      Security Posture with Corelight</h4>
-    row: 0
-    col: 0
-    width: 24
+    row: 18
+    col: 18
+    width: 6
     height: 2
   filters:
   - name: Global Time Restriction

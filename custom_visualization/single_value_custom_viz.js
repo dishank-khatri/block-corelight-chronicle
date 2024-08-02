@@ -1,12 +1,12 @@
-// Use Looker's Visualization API
-looker.plugins.visualizations.add({
+  // Use Looker's Visualization API
+  looker.plugins.visualizations.add({
     id: 'single_value_custom_viz',
     label: 'Single Value Custom Viz',
     create: function(element, config) {
       // Create a container for the count value
       this.container = element.appendChild(document.createElement("div"));
       this.container.setAttribute("id", "count-line-container");
-  
+
       // Applying Styling to the container
       this.container.style.fontWeight = "normal";
       this.container.style.textAlign = "center";
@@ -14,22 +14,23 @@ looker.plugins.visualizations.add({
       this.container.style.display = "flex";
       this.container.style.flexDirection = "column";
       this.container.style.alignItems = "center";
-  
+
       // Create a container for the text line
       this.textContainer = element.appendChild(document.createElement("div"));
       this.textContainer.setAttribute("id", "text-line-container");
       this.textContainer.style.fontSize = "10px";
+      this.textContainer.style.fontWeight = "bold";
       this.textContainer.style.textAlign = "center";
       this.textContainer.style.padding = "5px";
       this.textContainer.style.fontFamily = "Arial";
-  
+
       // Create a container element for your chart
       this.parentNode = document.createElement("div");
       this.parentNode.style.display = "flex";
       this.parentNode.style.flexDirection = "column";
       this.parentNode.style.alignItems = "center";
       element.appendChild(this.parentNode);
-  
+
       // Add base CSS for hover underline, initially not applied
       const style = document.createElement('style');
       style.innerHTML = `
@@ -39,13 +40,13 @@ looker.plugins.visualizations.add({
       `;
       document.head.appendChild(style);
     },
-  
+
     updateAsync: function(data, element, config, queryResponse, details, done) {
       var hashcolumn = queryResponse.fields.measure_like[0].name;
-  
+
       // Calculate the count value from the data
       const count = data.length;
-  
+
       let list = [];
       let list1 = [];
       for (var i of queryResponse.fields.measures) {
@@ -56,7 +57,7 @@ looker.plugins.visualizations.add({
           list1.push(row[key].value);
         });
       });
-  
+
       // Calculate the percentage value based on the available count
       const estimatedTotalItems = 100;
       var count_of_event = 0;
@@ -72,7 +73,7 @@ looker.plugins.visualizations.add({
       if (count != 1 && count_of_event1 > 0) {
         percentage = count ? Math.trunc((count_difference / count_of_event1) * estimatedTotalItems) : 0;
       }
-  
+
       // Determine the color based on the percentage
       var color;
       if (percentage < 0) {
@@ -82,13 +83,13 @@ looker.plugins.visualizations.add({
       } else {
         color = 'green';
       }
-  
+
       const arrowIcon = percentage > 0 ? '➚' : percentage === 0 ? '' : '➘';
       percentage = percentage + '%';
-  
+
       // Define color for count and line chart
       const color_for_count_and_line = '#262D33';
-  
+
       // Display the count and percentage value in the container
       this.container.innerHTML = `
         <div style="display: flex; align-items: center;">
@@ -99,26 +100,34 @@ looker.plugins.visualizations.add({
           </div>
         </div>
       `;
-  
+
       // Extract data from Looker's query response
       var labels = [];
       var datasets = [];
       var xField = queryResponse.fields.dimension_like[0].name;
       var yField = queryResponse.fields.measure_like[0].name;
-  
+
       // Populate labels and datasets based on your data model
       data.forEach(function(row) {
         datasets.push(row[yField].value ? row[yField].value : 0);
         labels.push(row[xField].value);
       });
-  
+
+      // Determine if the data is Daily or Hourly
+      const isHourly = labels.some(label => label.match(/ \d{2}$/));
+      this.textContainer.innerText = isHourly ? "Hourly" : "Daily";
+
+      //Reverse the labels and datasets to populate the chart in correct direction
+      labels.reverse();
+      datasets.reverse();
+
       // Ensure the chart_container is created only once
       if (!this.chart_container) {
         this.chart_container = document.createElement("canvas");
         this.chart_container.className = "line-chart-container";
         this.parentNode.appendChild(this.chart_container);
       }
-  
+
       // Initialize or update the Chart.js instance
       var ctx = this.chart_container;
       if (this.chart) {
@@ -133,13 +142,14 @@ looker.plugins.visualizations.add({
             data: datasets,
             fill: false,
             borderColor: color_for_count_and_line,
+            borderWidth: 2,
             pointRadius: 0,
             tension: 0.1
           }],
         },
         options: {
-          responsive: false,
-          maintainAspectRatio: true,
+          responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: {
               display: false, // Hide the X-axis
@@ -151,16 +161,24 @@ looker.plugins.visualizations.add({
           plugins: {
             legend: {
               display: false,
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return `Date: ${context.label}, Count: ${context.raw}`;
+                }
+              }
             }
           }
         },
       });
-  
+
       this.chart.canvas.style.height = '50px';
       this.chart.canvas.style.width = '200px';
       // Update the chart
       this.chart.update();
-  
+
       // Add drill functionality and conditional hover underline
       const countEventElement = document.getElementById('count-event');
       if (data[0][hashcolumn].links && data[0][hashcolumn].links.length > 0) {
@@ -174,9 +192,8 @@ looker.plugins.visualizations.add({
       } else {
         countEventElement.classList.remove('hover-underline');
       }
-  
+
       // Signal the completion of rendering
       done();
     }
   });
-  
