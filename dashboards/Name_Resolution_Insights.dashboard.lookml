@@ -33,7 +33,7 @@
     truncate_text: true
     hide_totals: false
     hide_row_totals: false
-    size_to_fit: true
+    size_to_fit: false
     table_theme: white
     limit_displayed_rows: false
     enable_conditional_formatting: false
@@ -52,7 +52,7 @@
       events__principal__ip.events__principal__ip: Source
       events__target__ip.events__target__ip: Responder
       events__network__dns__questions.name: Query
-      count_of_metadata_id: count
+      count_of_metadata_id: Count
       events.unusual_qtypes_external_link: Raw Logs
     series_cell_visualizations:
       count_of_metadata_id:
@@ -271,11 +271,11 @@
     conditional_formatting_include_nulls: false
     show_sql_query_menu_options: false
     column_order: ["$$$_row_numbers_$$$", events__target__ip.events__target__ip, count_of_name,
-      count_of_events_principal_ip, country, events.Internal]
+      count_of_events_principal_ip, country, events.Internal, events__target__ip.responding_dns_servers_external_link]
     show_totals: true
     show_row_totals: true
     truncate_header: false
-    minimum_column_width: 75
+    minimum_column_width:
     series_labels:
       events__target__ip.events__target__ip: Destination
       events__target__ip_location.country_or_region: Country
@@ -336,7 +336,7 @@
     truncate_text: true
     hide_totals: false
     hide_row_totals: false
-    size_to_fit: true
+    size_to_fit: false
     table_theme: white
     limit_displayed_rows: false
     enable_conditional_formatting: false
@@ -354,7 +354,7 @@
       events__principal__ip.events__principal__ip: Source
       events__target__ip.events__target__ip: Responder
       events__network__dns__questions.name: Query
-      events.formatted_metadata_id_count: count
+      events.formatted_metadata_id_count: Count
       events.network__dns__response: Rejected?
       events.nxdomain_responses_external_link: Raw Logs
     series_cell_visualizations: {}
@@ -484,7 +484,7 @@
     truncate_text: true
     hide_totals: false
     hide_row_totals: false
-    size_to_fit: true
+    size_to_fit: false
     table_theme: white
     limit_displayed_rows: false
     enable_conditional_formatting: false
@@ -504,7 +504,7 @@
       events__network__dns__questions.name: Query
       events__about__labels__rcode_name.value: Response
       events.failed_dns_queries_external_link: Raw Logs
-      count_of_metadata_id_2: count
+      count_of_metadata_id_2: Count
     series_cell_visualizations:
       count_of_metadata_id_2:
         is_active: false
@@ -678,7 +678,11 @@
     enable_conditional_formatting: false
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
+    single_value_title: ''
     defaults_version: 1
+    note_state: collapsed
+    note_display: hover
+    note_text: Monitoring DNS Query Response Times > 15ms
     listen:
       Global Time Restriction: avg_rtt.time_derived
       Sensor: avg_rtt.sensor_name_derived

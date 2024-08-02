@@ -27368,6 +27368,7 @@ view: events {
     group_item_label: "Labels"
   }
   dimension: formatted_traffic {
+    type: number
     sql: ${TABLE}.network.sent_bytes;;
   }
   measure: sum_of_orig_bytes {
@@ -27438,17 +27439,6 @@ view: events {
     sql: ${TABLE}.target.location.region_longitude ;;
     group_label: "Target Location"
     group_item_label: "Region Longitude"
-  }
-  dimension: target_location {
-    type: location
-    label: " "
-    sql_latitude: ${target__location__region_latitude} ;;
-    sql_longitude: ${target__location__region_longitude} ;;
-    group_label: "Target Location"
-    group_item_label: "Location"
-    html: <p>Latitude: {{  target__location__region_latitude}}</p>
-                    <p>Longitude: {{ target__location__region_longitude }}</p>
-                    <p>Country: {{ target__location__country_or_region }}</p>;;
   }
   dimension: target__location__state {
     type: string
