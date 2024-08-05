@@ -81,7 +81,10 @@
   - name: " (2)"
     type: text
     title_text: ''
-    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal;">DNS Hygiene</h4>'
+    body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal;">DNS
+      Hygiene</h4>
+
+      '
     row: 0
     col: 0
     width: 24
@@ -129,6 +132,9 @@
     defaults_version: 1
     hidden_fields: []
     hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: Unusual Qtypes
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -179,6 +185,9 @@
     conditional_formatting_include_nulls: false
     defaults_version: 1
     hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: Responding DNS Servers
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -209,6 +218,9 @@
     conditional_formatting_include_nulls: false
     defaults_version: 1
     hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: NXDOMAIN Responses
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -260,7 +272,7 @@
     truncate_text: true
     hide_totals: false
     hide_row_totals: false
-    size_to_fit: true
+    size_to_fit: false
     table_theme: white
     limit_displayed_rows: false
     enable_conditional_formatting: false
@@ -441,6 +453,9 @@
     rows_font_size: 12
     defaults_version: 1
     hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: Failed DNS Queries
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -573,6 +588,9 @@
         is_active: false
     defaults_version: 1
     hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: DNS Query Volume Over Time
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
