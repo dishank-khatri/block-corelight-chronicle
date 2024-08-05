@@ -1,6 +1,6 @@
 include: "/views/events.view"
 explore: dns {}
-
+explore: avg_rtt {}
 explore: events {
   sql_always_where: ${metadata__vendor_name} = "Corelight" ;;
   #SSH_Inferences_derived

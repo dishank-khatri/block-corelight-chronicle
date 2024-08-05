@@ -113,6 +113,53 @@ view: security_result_summary_derived {
   }
 }
 
+view: avg_rtt {
+  derived_table: {
+    sql: SELECT
+          events__network__dns__questions.name  AS questions_name,
+          events__target__ip  AS events__target__ip_events__target__ip,
+          ROUND(AVG(COALESCE(events.network.session_duration.seconds, 0)), 2)  AS events_network__session_duration__seconds
+      FROM datalake.events AS events
+      LEFT JOIN UNNEST(events.about) as events__about
+      LEFT JOIN UNNEST(events.target.ip) as events__target__ip
+      LEFT JOIN UNNEST(events.network.dns.questions) as events__network__dns__questions
+      WHERE events.metadata.product_event_type = "dns" AND metadata.vendor_name = "Corelight" AND
+      {% condition time_derived %} TIMESTAMP_SECONDS(events.metadata.event_timestamp.seconds) {% endcondition %} AND
+      {% condition sensor_name_derived %} (events.observer.hostname) {% endcondition %} AND
+      {% condition namespace_derived %} (events.observer.namespace) {% endcondition %}
+      GROUP BY
+          1,
+          2
+      ORDER BY
+          1
+      LIMIT 500;;
+  }
+  filter: time_derived {
+    type: date_time
+  }
+  filter: sensor_name_derived {
+    type: string
+  }
+  filter: namespace_derived {
+    type: string
+  }
+  dimension: Query {
+    type: string
+    sql: ${TABLE}.questions_name ;;
+  }
+  dimension: Responder {
+    type: string
+    sql: ${TABLE}.events__target__ip_events__target__ip ;;
+  }
+  dimension: avg_rtt {
+    type: number
+    sql: ${TABLE}.events_network__session_duration__seconds ;;
+  }
+  measure: count {
+    type: count
+  }
+}
+
 view: events {
   sql_table_name: `@{EVENTS}`;;
   dimension_group: event_time {
@@ -1204,6 +1251,10 @@ view: events {
     sql: ${TABLE}.network.session_duration.seconds ;;
     group_label: "Network Session Duration"
     group_item_label: "Seconds"
+  }
+  measure: average_time {
+    type: average
+    sql: ${TABLE}.network.session_duration.seconds ;;
   }
   dimension: network__session_id {
     type: string
@@ -27283,6 +27334,21 @@ view: events {
     group_label: "Target"
     group_item_label: "IP"
   }
+  dimension: ip_classification {
+    type: string
+    sql: CASE
+      WHEN ${events__about__labels__uid__only.value} = ${conn_events_search_derived.conn_uids} THEN 'Internal'
+      WHEN ${events__about__labels__uid__only.value} = ${conn_events_search_derived_outbound.conn_uids} THEN 'External'
+    END;;
+  }
+  dimension: Internal {
+    type: string
+    sql: CASE
+      WHEN ${ip_classification} = 'Internal' THEN 'Yes'
+      WHEN ${ip_classification} = 'External' THEN 'No'
+    END;;
+
+  }
   dimension: target__ip_geo_artifact {
     hidden: yes
     sql: ${TABLE}.target.ip_geo_artifact ;;
@@ -27300,6 +27366,25 @@ view: events {
     sql: ${TABLE}.target.labels ;;
     group_label: "Target"
     group_item_label: "Labels"
+  }
+  dimension: formatted_traffic {
+    type: number
+    sql: ${TABLE}.network.sent_bytes;;
+  }
+  measure: sum_of_orig_bytes {
+    type: sum
+    sql: ${formatted_traffic};;
+  }
+  measure: dns_query_volume_count {
+    type: string
+    sql:
+      CASE
+        WHEN ${sum_of_orig_bytes} >= (1024 * 1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/(1024 * 1024 * 1024 * 1024), 2) AS STRING), ' TB')
+        WHEN ${sum_of_orig_bytes} >= (1024 * 1024 * 1024) THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/(1024 * 1024 * 1024), 2) AS STRING), ' GB')
+        WHEN ${sum_of_orig_bytes} >= (1024 * 1024) THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/(1024 * 1024), 2) AS STRING), ' MB')
+        WHEN ${sum_of_orig_bytes} >= 1024 THEN CONCAT(CAST(ROUND(${sum_of_orig_bytes}/1024, 2) AS STRING), ' KB')
+        ELSE '0 B'
+    END;;
   }
   dimension: target__location__city {
     type: string
@@ -31091,6 +31176,75 @@ view: events {
             END
         ELSE CAST(${metadata_id_count} AS STRING)
     END;;
+  }
+
+  #Name Resolution Insights - Unusual Qtypes
+  measure: name_resolution_unusual_qtypes_count {
+    type: string
+    sql: ${formatted_metadata_id_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"qtype_name\"]=\"AXFR\" OR about.labels[\"qtype_name\"]=\"IXFR\" OR about.labels[\"qtype_name\"]=\"ANY\" OR about.labels[\"qtype_name\"]=\"TXT\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Name Resolutions Insights - Unusual Query Types found
+  measure: unusual_qtypes_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"qtype_name\"]=\"{{events__about__labels__qtype_name.value}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Name Resolution Insights - NXDOMAIN Responses
+  measure: nxdomain_responses_count {
+    type: string
+    sql: ${formatted_metadata_id_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Name Resolutions Insights - Network Evidence for NXDOMAIN Responses
+  measure: nxdomain_responses_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND network.dns.questions.name=\"{{ events__network__dns__questions.name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Name Resolution Insights - Failed DNS Queries
+  measure: failed_dns_queries_count {
+    type: string
+    sql: ${formatted_metadata_id_count} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND (about.labels[\"rcode_name\"] = \"SERVFAIL\" OR about.labels[\"rcode_name\"] = \"REFUSED\" OR about.labels[\"rcode_name\"] = \"FORMERR\" OR about.labels[\"rcode_name\"] = \"NOTIMP\" OR about.labels[\"rcode_name\"] = \"NOTAUTH\") {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Name Resolutions Insights - Network Evidence for Failed DNS Queries
+  measure: failed_dns_queries_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"rcode_name\"]=\"{{events__about__labels__rcode_name.value}}\" AND network.dns.questions.name=\"{{ events__network__dns__questions.name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Name Resolution Insights - Monitoring Query Types by AVG time
+  measure: monitoring_query_type_by_average_time_count {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
   }
 
   #Security Posture - Telnet Sessions
@@ -38623,14 +38777,24 @@ view: events__target__ip {
     type: string
     sql: events__target__ip ;;
   }
-  # # Add a measure to count events based on target IP
-  # measure: target_ips_count {
-  #   type: count
-  #   link: {
-  #     label: "View in Chronicle"
-  #     url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip}}\" AND network.http.method=\"{{events.network__http__method}}\" AND target.url=\"{{events.target__url}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
-  #   }
-  # }
+  # Name Resolution Insights - DNS Servers actively responding to queries
+  measure: responding_dns_servers_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND target.ip=\"{{events__target__ip}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+  # Name Resolution Insights - Responding DNS Servers
+  measure: responding_dns_servers_count {
+    type: count_distinct
+    sql: ${events__target__ip} ;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
 }
 
 view: events__src__nat_ip {
@@ -106343,7 +106507,6 @@ GROUP BY
     sql: ${TABLE}.conn_uids;;
   }
 }
-
 
 #Security Posture - Self Signed Certs
 view: events__security_result__detection_fields_validation_status {
