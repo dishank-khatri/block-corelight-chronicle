@@ -780,6 +780,20 @@ explore: events {
     fields: [events__about__labels__auth__success.value]
     relationship: one_to_many
   }
+  # Remote Activity Insights
+  join: events__about__labels__cookie {
+    view_label: "Events: About Labels Cookie"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__cookie ON ${events__about__labels__cookie.key} = 'cookie' ;;
+    fields: [events__about__labels__cookie.value]
+    relationship: one_to_many
+  }
+  # Remote Activity Insights
+  join: events__about__labels__result {
+    view_label: "Events: About Labels Result"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__result ON ${events__about__labels__result.key} = 'result' ;;
+    fields: [events__about__labels__result.value]
+    relationship: one_to_many
+  }
   join: events__about__labels__uid {
     view_label: "Events: About Labels UID"
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__uid ON ${events__about__labels__uid.key} IN ('uid', 'fuid') ;;
