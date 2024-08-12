@@ -54950,14 +54950,6 @@ view: events__about__labels__cookie {
     type: string
     sql: ${TABLE}.key ;;
   }
-  dimension: rbac_enabled {
-    type: yesno
-    sql: ${TABLE}.rbac_enabled ;;
-  }
-  dimension: source {
-    type: string
-    sql: ${TABLE}.source ;;
-  }
   dimension: value {
     type: string
     sql: ${TABLE}.value ;;
@@ -54970,40 +54962,11 @@ view: events__about__labels__result {
     type: string
     sql: ${TABLE}.key ;;
   }
-  dimension: rbac_enabled {
-    type: yesno
-    sql: ${TABLE}.rbac_enabled ;;
-  }
-  dimension: source {
-    type: string
-    sql: ${TABLE}.source ;;
-  }
   dimension: value {
     type: string
     sql: ${TABLE}.value ;;
   }
 }
-
-# Remote Activity Insights
-view: events__about__labels__vpn_type {
-  dimension: key {
-    type: string
-    sql: ${TABLE}.key ;;
-  }
-  dimension: rbac_enabled {
-    type: yesno
-    sql: ${TABLE}.rbac_enabled ;;
-  }
-  dimension: source {
-    type: string
-    sql: ${TABLE}.source ;;
-  }
-  dimension: value {
-    type: string
-    sql: ${TABLE}.value ;;
-  }
-}
-
 
 view: events__about__labels__uid {
   dimension: key {
