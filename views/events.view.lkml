@@ -1,45 +1,50 @@
 view: dns {
   derived_table: {
     sql: SELECT
-    events__network__dns__questions.name  AS events__network__dns__questions_name,
-    events.metadata.vendor_name  AS events_metadata__vendor_name,
-    events.observer.hostname AS events__observer__hostname,
-    CAST(events.target.port AS STRING) AS events__target__port,
-    events.metadata.product_event_type  AS events_metadata__product_event_type,
-    events__principal__ip AS events__principal__ip,
-    events__about__labels__qtype_name.value AS events__about__labels__qtype_name,
-    events__about__labels__rcode_name.value AS events__about__labels__rcode_name,
-    FORMAT_TIMESTAMP("%FT%TZ", TIMESTAMP_SECONDS(MIN(events.metadata.event_timestamp.seconds)) ) AS events_lower_date,
-    FORMAT_TIMESTAMP("%FT%TZ", TIMESTAMP_ADD(TIMESTAMP_SECONDS(MAX(events.metadata.event_timestamp.seconds)), INTERVAL 1 SECOND) ) AS events_upper_date
-FROM `datalake.events` AS events
-LEFT JOIN UNNEST(events.about) as events__about
-LEFT JOIN UNNEST(events.target.ip) as events__target__ip
-LEFT JOIN UNNEST(events.principal.ip) as events__principal__ip
-LEFT JOIN UNNEST(labels) as events__about__labels__qtype_name ON events__about__labels__qtype_name.key = 'qtype_name'
-LEFT JOIN UNNEST(labels) as events__about__labels__rcode_name ON events__about__labels__rcode_name.key = 'rcode_name'
-LEFT JOIN UNNEST(events.network.dns.questions) as events__network__dns__questions
-WHERE {% condition time_derived %} TIMESTAMP_SECONDS(events.metadata.event_timestamp.seconds) {% endcondition %} AND (events.metadata.product_event_type ) = 'dns' AND (((events__target__ip ) <> '0.0.0.0' AND (events__target__ip ) <> '255.255.255.255' OR (events__target__ip ) IS NULL) AND ((events__principal__ip ) <> '0.0.0.0' AND (events__principal__ip ) <> '255.255.255.255' OR (events__principal__ip ) IS NULL)) AND (((events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL))
-GROUP BY
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8
-ORDER BY
-    9 DESC ;;
+          events__network__dns__questions.name  AS events__network__dns__questions_name,
+          events.metadata.vendor_name  AS events_metadata__vendor_name,
+          events.observer.hostname AS events__observer__hostname,
+          events.observer.namespace AS events__observer__namespace,
+          CAST(events.target.port AS STRING) AS events__target__port,
+          events.metadata.product_event_type  AS events_metadata__product_event_type,
+          events__principal__ip AS events__principal__ip,
+          events__about__labels__qtype_name.value AS events__about__labels__qtype_name,
+          events__about__labels__rcode_name.value AS events__about__labels__rcode_name,
+          FORMAT_TIMESTAMP("%FT%TZ", TIMESTAMP_SECONDS(MIN(events.metadata.event_timestamp.seconds)) ) AS events_lower_date,
+          FORMAT_TIMESTAMP("%FT%TZ", TIMESTAMP_ADD(TIMESTAMP_SECONDS(MAX(events.metadata.event_timestamp.seconds)), INTERVAL 1 SECOND) ) AS events_upper_date
+      FROM `datalake.events` AS events
+      LEFT JOIN UNNEST(events.about) as events__about
+      LEFT JOIN UNNEST(events.target.ip) as events__target__ip
+      LEFT JOIN UNNEST(events.principal.ip) as events__principal__ip
+      LEFT JOIN UNNEST(labels) as events__about__labels__qtype_name ON events__about__labels__qtype_name.key = 'qtype_name'
+      LEFT JOIN UNNEST(labels) as events__about__labels__rcode_name ON events__about__labels__rcode_name.key = 'rcode_name'
+      LEFT JOIN UNNEST(events.network.dns.questions) as events__network__dns__questions
+      WHERE {% condition time_derived %} TIMESTAMP_SECONDS(events.metadata.event_timestamp.seconds) {% endcondition %} AND {% condition namespace_derived %} events.observer.namespace {% endcondition %} AND (events.metadata.product_event_type ) = 'dns' AND (((events__target__ip ) <> '0.0.0.0' AND (events__target__ip ) <> '255.255.255.255' OR (events__target__ip ) IS NULL) AND ((events__principal__ip ) <> '0.0.0.0' AND (events__principal__ip ) <> '255.255.255.255' OR (events__principal__ip ) IS NULL)) AND (((events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL))
+      GROUP BY
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+      ORDER BY
+          9 DESC ;;
   }
   filter: time_derived {
     type: date_time
+  }
+  filter: namespace_derived {
+    type: string
   }
   dimension: query_derived {
     type: string
     sql: ${TABLE}.events__network__dns__questions_name;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ dns.vendor_name_derived }}\"AND metadata.product_event_type=\"{{ dns.product_event_type_derived }}\"AND network.dns.questions.name=\"{{ dns.query_derived | url_encode}}\"{% if _filters['dns.hostname_derived'] %} AND observer.hostname=\"{{ _filters['dns.hostname_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['dns.port_derived'] %} AND (target.port={{ _filters['dns.port_derived'] | url_encode }}){% else %}{% endif %}{% if _filters['dns.qtype_derived'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['dns.qtype_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"qtype_name\"] != \"PTR\" AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ dns.lower_date_derived }}&endTime={{ dns.upper_date_derived }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ dns.vendor_name_derived }}\"AND metadata.product_event_type=\"{{ dns.product_event_type_derived }}\"AND network.dns.questions.name=\"{{ dns.query_derived | url_encode}}\"{% if _filters['dns.hostname_derived'] %} AND observer.hostname=\"{{ _filters['dns.hostname_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['dns.port_derived'] %} AND (target.port={{ _filters['dns.port_derived'] | url_encode }}){% else %}{% endif %}{% if _filters['dns.qtype_derived'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['dns.qtype_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"qtype_name\"] != \"PTR\" AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['namespace_derived'] %} AND observer.namespace=\"{{ _filters['namespace_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ dns.lower_date_derived }}&endTime={{ dns.upper_date_derived }}"
     }
   }
   dimension: query_ned_derived {
@@ -47,7 +52,7 @@ ORDER BY
     sql: ${TABLE}.events__network__dns__questions_name;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ dns.vendor_name_derived }}\"AND metadata.product_event_type=\"{{ dns.product_event_type_derived }}\"AND network.dns.questions.name=\"{{ dns.query_derived | url_encode}}\"{% if _filters['dns.hostname_derived'] %} AND observer.hostname=\"{{ _filters['dns.hostname_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['dns.port_derived'] %} AND (target.port={{ _filters['dns.port_derived'] | url_encode }}){% else %}{% endif %}{% if _filters['dns.qtype_derived'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['dns.qtype_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"qtype_name\"] != \"PTR\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN\" AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ dns.lower_date_derived }}&endTime={{ dns.upper_date_derived }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ dns.vendor_name_derived }}\"AND metadata.product_event_type=\"{{ dns.product_event_type_derived }}\"AND network.dns.questions.name=\"{{ dns.query_derived | url_encode}}\"{% if _filters['dns.hostname_derived'] %} AND observer.hostname=\"{{ _filters['dns.hostname_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['dns.port_derived'] %} AND (target.port={{ _filters['dns.port_derived'] | url_encode }}){% else %}{% endif %}{% if _filters['dns.qtype_derived'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['dns.qtype_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"qtype_name\"] != \"PTR\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN\" AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['namespace_derived'] %} AND observer.namespace=\"{{ _filters['namespace_derived'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ dns.lower_date_derived }}&endTime={{ dns.upper_date_derived }}"
     }
   }
   dimension: qtype_derived {
@@ -181,27 +186,27 @@ view: events {
   dimension: clevent_events {
     type: string
     sql: CASE
-    WHEN ${events__about__labels__indicator__type.value} IS NOT NULL
-    THEN ${events__about__labels__indicator__type.value}
-    WHEN ${events__security_result.description} IS NOT NULL
-    THEN ${events__security_result.description}
-    WHEN ${events__security_result.summary} IS NOT NULL
-    THEN ${events__security_result.summary}
-    END;;
+          WHEN ${events__about__labels__indicator__type.value} IS NOT NULL
+          THEN ${events__about__labels__indicator__type.value}
+          WHEN ${events__security_result.description} IS NOT NULL
+          THEN ${events__security_result.description}
+          WHEN ${events__security_result.summary} IS NOT NULL
+          THEN ${events__security_result.summary}
+          END;;
   }
   #home
   measure: home_events_count {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND  metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND(about.labels[\"indicator_type\"]=\"{{ clevent_events }}\" OR security_result.description=\"{{ clevent_events }}\" OR security_result.summary=\"{{ clevent_events }}\") AND observer.hostname!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND  metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND(about.labels[\"indicator_type\"]=\"{{ clevent_events }}\" OR security_result.description=\"{{ clevent_events }}\" OR security_result.summary=\"{{ clevent_events }}\") AND observer.hostname!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
   #x509
   dimension: cert_not_valid_after {
-      sql: FORMAT_TIMESTAMP("%Y-%m-%dT%H:%M:%SZ",TIMESTAMP_SECONDS(${TABLE}.network.tls.server.certificate.not_after.seconds),"UTC") ;;
-    }
+    sql: FORMAT_TIMESTAMP("%Y-%m-%dT%H:%M:%SZ",TIMESTAMP_SECONDS(${TABLE}.network.tls.server.certificate.not_after.seconds),"UTC") ;;
+  }
   #x509
   dimension: certificate_expired {
     type:string
@@ -221,7 +226,7 @@ view: events {
     sql: "link" ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.id = b\"{{ events.metadata__id | url_encode }}\"&startTime={{ events.lower_date | url_encode }}&endTime={{ events.upper_date | url_encode }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.id = b\"{{ events.metadata__id | url_encode }}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date | url_encode }}&endTime={{ events.upper_date | url_encode }}"
     }
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
@@ -380,7 +385,7 @@ view: events {
     END ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.description=\"{{ events__security_result.description }}\" AND security_result.detection_fields[\"severity_level\"]=\"{{events.severity_notice | split: '(' | last | remove: ')'}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} AND about.port={{ events.proto_port | split: '/' | last }} AND network.ip_protocol=\"{{ events.proto_port | split: '/' | first }}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.description=\"{{ events__security_result.description }}\" AND security_result.detection_fields[\"severity_level\"]=\"{{events.severity_notice | split: '(' | last | remove: ')'}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} AND about.port={{ events.proto_port | split: '/' | last }} AND network.ip_protocol=\"{{ events.proto_port | split: '/' | first }}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -29519,7 +29524,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_conn_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_conn_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29530,7 +29535,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dce_rpc_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dce_rpc_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29541,7 +29546,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dhcp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dhcp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29552,7 +29557,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dnp3_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dnp3_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29563,7 +29568,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dns_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dns_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29574,7 +29579,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dpd_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_dpd_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29585,7 +29590,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_files_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_files_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29596,7 +29601,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ftp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ftp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29607,7 +29612,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_http_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_http_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29618,7 +29623,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_irc_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_irc_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29629,7 +29634,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_kerberos_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_kerberos_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29640,7 +29645,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_modbus_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_modbus_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29651,7 +29656,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_mysql_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_mysql_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29662,7 +29667,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ntlm_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ntlm_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29673,7 +29678,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_pe_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_pe_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29684,7 +29689,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_radius_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_radius_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29695,7 +29700,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_rdp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_rdp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29706,7 +29711,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_rfb_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_rfb_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29717,7 +29722,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_sip_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_sip_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29728,7 +29733,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_smb_files_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_smb_files_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29739,7 +29744,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_smb_mapping_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_smb_mapping_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29750,7 +29755,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_smtp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_smtp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29761,7 +29766,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_snmp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_snmp_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29772,7 +29777,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_socks_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_socks_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29783,7 +29788,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_software_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_software_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29794,7 +29799,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ssh_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ssh_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29805,7 +29810,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ssl_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_ssl_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29816,7 +29821,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_syslog_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_syslog_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29827,7 +29832,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_traceroute_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_traceroute_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29838,7 +29843,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_tunnel_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_tunnel_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29849,7 +29854,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_weird_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_weird_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29860,7 +29865,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_x509_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_x509_entries_per_second\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29871,7 +29876,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"monitor_total_mbps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"monitor_total_mbps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29882,7 +29887,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"monitor_total_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"monitor_total_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29893,7 +29898,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"monitor_total_drops_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"monitor_total_drops_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29904,7 +29909,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_in_bytes_mbps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_in_bytes_mbps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29915,7 +29920,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_out_bytes_mbps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_out_bytes_mbps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29926,7 +29931,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_in_packets_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_in_packets_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29937,7 +29942,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_out_packets_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"mgmt_out_packets_kpps\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29948,7 +29953,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"files_total\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"files_total\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29959,7 +29964,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"files_queued_sftp\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"files_queued_sftp\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29970,7 +29975,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"files_queued_s3\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"files_queued_s3\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29981,7 +29986,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_splunk_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_splunk_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -29992,7 +29997,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_syslog_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_syslog_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -30003,7 +30008,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_json_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_json_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -30014,7 +30019,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_kafka_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_kafka_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -30025,7 +30030,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_investigator_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_investigator_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -30036,7 +30041,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_kinesis_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_kinesis_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -30047,7 +30052,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_hec_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_hec_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #rates
@@ -30058,7 +30063,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_elasticsearch_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"logs_elasticsearch_export_lag\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30066,10 +30071,10 @@ view: events {
   measure: bursty {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__bursty.value}) > 0
-    THEN AVG(${events__about__labels__bursty.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__bursty.value}) > 0
+          THEN AVG(${events__about__labels__bursty.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "Bursty"
     value_format: "0.00\%"
@@ -30078,10 +30083,10 @@ view: events {
   measure: dns_half_duplex_orig {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__dns_half_duplex_orig.value}) > 0
-    THEN AVG(${events__about__labels__dns_half_duplex_orig.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__dns_half_duplex_orig.value}) > 0
+          THEN AVG(${events__about__labels__dns_half_duplex_orig.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "dns half duplex orig"
     value_format: "0.00\%"
@@ -30090,10 +30095,10 @@ view: events {
   measure: dns_half_duplex_resp {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__dns_half_duplex_resp.value}) > 0
-    THEN AVG(${events__about__labels__dns_half_duplex_resp.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__dns_half_duplex_resp.value}) > 0
+          THEN AVG(${events__about__labels__dns_half_duplex_resp.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "dns half duplex resp"
     value_format: "0.00\%"
@@ -30102,10 +30107,10 @@ view: events {
   measure: labels__local_to_local {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__local_to_local.value}) > 0
-    THEN AVG(${events__about__labels__local_to_local.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__local_to_local.value}) > 0
+          THEN AVG(${events__about__labels__local_to_local.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "local to local"
     value_format: "0.00\%"
@@ -30114,10 +30119,10 @@ view: events {
   measure: remote_to_remote {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__remote_to_remote.value}) > 0
-    THEN AVG(${events__about__labels__remote_to_remote.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__remote_to_remote.value}) > 0
+          THEN AVG(${events__about__labels__remote_to_remote.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "remote to remote"
     value_format: "0.00\%"
@@ -30126,10 +30131,10 @@ view: events {
   measure: tcp_backscatter {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__tcp_backscatter.value}) > 0
-    THEN AVG(${events__about__labels__tcp_backscatter.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_backscatter.value}) > 0
+          THEN AVG(${events__about__labels__tcp_backscatter.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp_backscatter"
     value_format: "0.00\%"
@@ -30138,46 +30143,46 @@ view: events {
   measure: tcp_byte_counts_wrong {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__tcp_byte_counts_wrong.value}) > 0
-    THEN AVG(${events__about__labels__tcp_byte_counts_wrong.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_byte_counts_wrong.value}) > 0
+          THEN AVG(${events__about__labels__tcp_byte_counts_wrong.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp byte counts wrong"
     value_format: "0.00\%"
   }
- #zeek-doctor
+  #zeek-doctor
   measure: tcp_half_duplex {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__tcp_half_duplex.value}) > 0
-    THEN AVG(${events__about__labels__tcp_half_duplex.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_half_duplex.value}) > 0
+          THEN AVG(${events__about__labels__tcp_half_duplex.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp half duplex"
     value_format: "0.00\%"
   }
- #zeek-doctor
+  #zeek-doctor
   measure: tcp_missed_bytes {
     type: number
     sql:CASE
-    WHEN AVG(${events__about__labels__tcp_missed_bytes.value}) > 0
-    THEN AVG(${events__about__labels__tcp_missed_bytes.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_missed_bytes.value}) > 0
+          THEN AVG(${events__about__labels__tcp_missed_bytes.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp missed bytes"
     value_format: "0.00\%"
   }
- #zeek-doctor
+  #zeek-doctor
   measure: tcp_no_ssl_on_443 {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__tcp_no_ssl_on_443.value}) > 0
-    THEN AVG(${events__about__labels__tcp_no_ssl_on_443.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_no_ssl_on_443.value}) > 0
+          THEN AVG(${events__about__labels__tcp_no_ssl_on_443.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp no ssl on443"
     value_format: "0.00\%"
@@ -30186,10 +30191,10 @@ view: events {
   measure: tcp_no_three_way_handshake {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__tcp_no_three_way_handshake.value}) > 0
-    THEN AVG(${events__about__labels__tcp_no_three_way_handshake.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_no_three_way_handshake.value}) > 0
+          THEN AVG(${events__about__labels__tcp_no_three_way_handshake.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp no three way handshake"
     value_format: "0.00\%"
@@ -30198,10 +30203,10 @@ view: events {
   measure: tcp_retransmissions {
     type: number
     sql:CASE
-    WHEN AVG(${events__about__labels__tcp_retransmissions.value}) > 0
-    THEN AVG(${events__about__labels__tcp_retransmissions.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_retransmissions.value}) > 0
+          THEN AVG(${events__about__labels__tcp_retransmissions.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp retransmissions"
     value_format: "0.00\%"
@@ -30210,10 +30215,10 @@ view: events {
   measure: tcp_scan {
     type: number
     sql: CASE
-    WHEN AVG(${events__about__labels__tcp_scan.value}) > 0
-    THEN AVG(${events__about__labels__tcp_scan.value})
-    ELSE 0
-    END;;
+          WHEN AVG(${events__about__labels__tcp_scan.value}) > 0
+          THEN AVG(${events__about__labels__tcp_scan.value})
+          ELSE 0
+          END;;
     group_label: "Zeek Doctor"
     label: "tcp scan"
     value_format: "0.00\%"
@@ -30231,7 +30236,7 @@ view: events {
     value_format: "0.000000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.tls.server.certificate.subject=\"{{ events.network__tls__server__certificate__subject | replace:'\','\\' | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' }}\"{% else %}{% endif %}AND observer.hostname!=\"\" AND network.tls.server.certificate.subject!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.tls.server.certificate.subject=\"{{ events.network__tls__server__certificate__subject | replace:'\','\\' | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' }}\"{% else %}{% endif %}AND observer.hostname!=\"\" AND network.tls.server.certificate.subject!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30250,7 +30255,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__indicator.value'] %} AND about.labels[\"indicator\"]=\"{{ _filters['events__about__labels__indicator.value'] | replace:'\"','' }}\"{% else %}{% endif %} AND about.labels[\"indicator_type\"]=\"{{ events__about__labels__indicator__type.value }}\"{% if _filters['events__about__labels__source.value'] %} AND (about.labels[\"sources\"]={{_filters['events__about__labels__source.value'] |replace:'%','/' | replace: '^_','_' | url_encode}}){% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | replace:',','\" OR target.port=\"' }}){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__indicator.value'] %} AND about.labels[\"indicator\"]=\"{{ _filters['events__about__labels__indicator.value'] | replace:'\"','' }}\"{% else %}{% endif %} AND about.labels[\"indicator_type\"]=\"{{ events__about__labels__indicator__type.value }}\"{% if _filters['events__about__labels__source.value'] %} AND (about.labels[\"sources\"]={{_filters['events__about__labels__source.value'] |replace:'%','/' | replace: '^_','_' | url_encode}}){% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | replace:',','\" OR target.port=\"' }}){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #intel
@@ -30260,7 +30265,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND about.labels[\"indicator_type\"]=\"{{ events__about__labels__indicator__type.value }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND target.port={{ events.target__port__intel }} AND about.labels[\"indicator\"]=\"{{ events__about__labels__indicator.value }}\" AND about.labels[\"confidence\"]=\"{{ events__about__labels__confidence.value}}\"AND about.labels[\"where\"]=\"{{ events__about__labels__seen__where.value }}\"AND about.labels[\"sources\"]=\"{{ events__about__labels__source.value  | replace:'&#39;',\"'\"}}\"AND about.labels[\"category\"]=\"{{ events__about__labels__catagory.value | replace:'&#39;',\"'\"}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND about.labels[\"indicator_type\"]=\"{{ events__about__labels__indicator__type.value }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND target.port={{ events.target__port__intel }} AND about.labels[\"indicator\"]=\"{{ events__about__labels__indicator.value }}\" AND about.labels[\"confidence\"]=\"{{ events__about__labels__confidence.value}}\"AND about.labels[\"where\"]=\"{{ events__about__labels__seen__where.value }}\"AND about.labels[\"sources\"]=\"{{ events__about__labels__source.value  | replace:'&#39;',\"'\"}}\"AND about.labels[\"category\"]=\"{{ events__about__labels__catagory.value | replace:'&#39;',\"'\"}}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #vpn insights
@@ -30271,7 +30276,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ events__about__labels__vpn__type.value }}\"AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ events__about__labels__vpn__type.value }}\"AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #VPN Insights
@@ -30280,7 +30285,7 @@ view: events {
     sql: ${gigabyte_count} ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.sent_bytes={{events.bytes_out}} AND network.received_bytes={{events.bytes_in}}{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.sent_bytes={{events.bytes_out}} AND network.received_bytes={{events.bytes_in}}{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #VPN Insights
@@ -30290,7 +30295,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\"AND target.ip=\"{{events__target__ip.events__target__ip}}\"AND target.port={{ events.target__port__intel }}AND network.ip_protocol=\"{{ events.protocol_string }}\" AND target.application=\"{{ events.target__application }}\"AND network.sent_bytes={{events.bytes_out}} AND network.received_bytes={{events.bytes_in}}{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\"AND target.ip=\"{{events__target__ip.events__target__ip}}\"AND target.port={{ events.target__port__intel }}AND network.ip_protocol=\"{{ events.protocol_string }}\" AND target.application=\"{{ events.target__application }}\"AND network.sent_bytes={{events.bytes_out}} AND network.received_bytes={{events.bytes_in}}{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #VPN Insights
@@ -30300,7 +30305,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.tls.client.ja3=\"{{events.network__tls__client__ja3}}\"AND network.tls.server.ja3s=\"{{events.network__tls__server__ja3s}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.tls.client.ja3=\"{{events.network__tls__client__ja3}}\"AND network.tls.server.ja3s=\"{{events.network__tls__server__ja3s}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #Intel
@@ -30316,16 +30321,16 @@ view: events {
     html:{{value}};;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__indicator.value'] %} AND about.labels[\"indicator\"]=\"{{ _filters['events__about__labels__indicator.value'] | replace:'\"','' }}\"{% else %}{% endif %} AND about.labels[\"indicator_type\"]=\"{{ events__about__labels__indicator__type.value }}\"{% if _filters['events__about__labels__source.value'] %} AND (about.labels[\"sources\"]={{_filters['events__about__labels__source.value'] |replace:'%','/' | replace: '^_','_' | url_encode}}){% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | replace:',','\" OR target.port=\"' }}){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__indicator.value'] %} AND about.labels[\"indicator\"]=\"{{ _filters['events__about__labels__indicator.value'] | replace:'\"','' }}\"{% else %}{% endif %} AND about.labels[\"indicator_type\"]=\"{{ events__about__labels__indicator__type.value }}\"{% if _filters['events__about__labels__source.value'] %} AND (about.labels[\"sources\"]={{_filters['events__about__labels__source.value'] |replace:'%','/' | replace: '^_','_' | url_encode}}){% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | replace:',','\" OR target.port=\"' }}){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
- #vpn_insights
+  #vpn_insights
   measure: principal_count_percent {
     type: percent_of_total
     sql: ${principal_count} ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #vpn_insights
@@ -30340,7 +30345,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}AND about.labels[\"local_orig\"]=\"{{events__about__labels__local__orig.value}}\"AND about.labels[\"local_resp\"]=\"{{events__about__labels__local__resp.value}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}AND about.labels[\"local_orig\"]=\"{{events__about__labels__local__orig.value}}\"AND about.labels[\"local_resp\"]=\"{{events__about__labels__local__resp.value}}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #notices
@@ -30350,7 +30355,7 @@ view: events {
     label: "Events"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__security_result.description_for_filter_notice'] %} AND security_result.description=\"{{ _filters['events__security_result.description_for_filter_notice'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.proto_port_for_filter_notice'] %} AND about.port={{ _filters['events.proto_port_for_filter_notice'] | split: '/' | last | replace:'\"','' }} AND network.ip_protocol=\"{{ _filters['events.proto_port_for_filter_notice'] | split: '/' | first | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__security_result.description_for_filter_notice'] %} AND security_result.description=\"{{ _filters['events__security_result.description_for_filter_notice'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.proto_port_for_filter_notice'] %} AND about.port={{ _filters['events.proto_port_for_filter_notice'] | split: '/' | last | replace:'\"','' }} AND network.ip_protocol=\"{{ _filters['events.proto_port_for_filter_notice'] | split: '/' | first | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30360,10 +30365,10 @@ view: events {
     group_label: "source_type_count"
     label: "Events"
     html: <p>Count: {{value}}
-    </p> ;;
+      </p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__uid.value'] %} AND (about.labels[\"uid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"uid\"]=\"' }}\" OR about.labels[\"fuid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"fuid\"]=\"' }}\"){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__uid.value'] %} AND (about.labels[\"uid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"uid\"]=\"' }}\" OR about.labels[\"fuid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"fuid\"]=\"' }}\"){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #log_hunting
@@ -30371,7 +30376,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__uid.value'] %} AND (about.labels[\"uid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"uid\"]=\"' }}\" OR about.labels[\"fuid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"fuid\"]=\"' }}\"){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events__about__labels__uid.value'] %} AND (about.labels[\"uid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"uid\"]=\"' }}\" OR about.labels[\"fuid\"]=\"{{ _filters['events__about__labels__uid.value'] | replace:'\"','' | replace:',','\" OR about.labels[\"fuid\"]=\"' }}\"){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #notices
@@ -30382,7 +30387,7 @@ view: events {
     html:<p>Count: {{value}}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.description=\"{{ events__security_result.description }}\"{% if _filters['events.severity_notice_for_filter'] %} AND security_result.detection_fields[\"severity_level\"]=\"{{events.severity_notice_for_filter | split: '(' | last | remove: ')'}}\"{% else %}{% endif %}{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events.proto_port_for_filter_notice'] %} AND about.port={{ _filters['events.proto_port_for_filter_notice'] | split: '/' | last | replace:'\"','' }} AND network.ip_protocol=\"{{ _filters['events.proto_port_for_filter_notice'] | split: '/' | first | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.description=\"{{ events__security_result.description }}\"{% if _filters['events.severity_notice_for_filter'] %} AND security_result.detection_fields[\"severity_level\"]=\"{{events.severity_notice_for_filter | split: '(' | last | remove: ')'}}\"{% else %}{% endif %}{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events.proto_port_for_filter_notice'] %} AND about.port={{ _filters['events.proto_port_for_filter_notice'] | split: '/' | last | replace:'\"','' }} AND network.ip_protocol=\"{{ _filters['events.proto_port_for_filter_notice'] | split: '/' | first | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #notices
@@ -30393,7 +30398,7 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.severity_details=\"{{events__security_result.severity_details}}\" AND security_result.detection_fields[\"severity_level\"]=\"{{events__security_result__detection_fields_severity_level.value}}\"{% if _filters['events__security_result.description_for_filter_notice'] %} AND security_result.description=\"{{ _filters['events__security_result.description_for_filter_notice'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events.proto_port_for_filter_notice'] %} AND about.port={{ _filters['events.proto_port_for_filter_notice'] | split: '/' | last | replace:'\"','' }} AND network.ip_protocol=\"{{ _filters['events.proto_port_for_filter_notice'] | split: '/' | first | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.severity_details=\"{{events__security_result.severity_details}}\" AND security_result.detection_fields[\"severity_level\"]=\"{{events__security_result__detection_fields_severity_level.value}}\"{% if _filters['events__security_result.description_for_filter_notice'] %} AND security_result.description=\"{{ _filters['events__security_result.description_for_filter_notice'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events.proto_port_for_filter_notice'] %} AND about.port={{ _filters['events.proto_port_for_filter_notice'] | split: '/' | last | replace:'\"','' }} AND network.ip_protocol=\"{{ _filters['events.proto_port_for_filter_notice'] | split: '/' | first | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #RDP_inferences
@@ -30401,7 +30406,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"{{ events__about__labels.key }}\"]=\"{{ events__about__labels.value }}\" AND about.labels[\"cookie\"]=\"{{ events__about__labels__connecting__user.value }}\" {% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"{{ events__about__labels.key }}\"]=\"{{ events__about__labels.value }}\" AND about.labels[\"cookie\"]=\"{{ events__about__labels__connecting__user.value }}\" {% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #RDP_inferences
@@ -30412,7 +30417,7 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inferences\" AND about.labels.value=\"{{ events__about__labels.value }}\"{% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inferences\" AND about.labels.value=\"{{ events__about__labels.value }}\"{% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   measure: inferences_area_count {
@@ -30421,7 +30426,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"inference\"]=\"{{ events__about__labels__inferences.value }}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"inference\"]=\"{{ events__about__labels__inferences.value }}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30438,7 +30443,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inference\" AND about.labels.value=\"{{ events__about__labels__inferences_vpn.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inference\" AND about.labels.value=\"{{ events__about__labels__inferences_vpn.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #vpn insights
@@ -30450,7 +30455,7 @@ view: events {
     {{ value }};;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inference\" AND about.labels.value=\"{{ events__about__labels__inferences_vpn.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inference\" AND about.labels.value=\"{{ events__about__labels__inferences_vpn.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about__labels__vpn__type.value'] %} AND about.labels.key=\"vpn_type\" AND about.labels.value=\"{{ _filters['events__about__labels__vpn__type.value'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND about.labels[\"vpn_type\"]!=\"\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #RDP_inferences
@@ -30461,8 +30466,8 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.labels.key=\"{{ events__target__labels.key }}\"AND target.labels.value=\"{{ events__target__labels.value }}\"{% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
-      }
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.labels.key=\"{{ events__target__labels.key }}\"AND target.labels.value=\"{{ events__target__labels.value }}\"{% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
   }
 
 
@@ -30470,7 +30475,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inferences\" AND about.labels.value=\"{{ events__about__labels.value }}\"{% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels.key=\"inferences\" AND about.labels.value=\"{{ events__about__labels.value }}\"{% if _filters['events.observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #ip_interrogation
@@ -30478,7 +30483,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{metadata__vendor_name}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}AND network.ip_protocol=\"{{ events.protocol_string }}\"AND target.port={{ events.target__port }}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{metadata__vendor_name}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}AND network.ip_protocol=\"{{ events.protocol_string }}\"AND target.port={{ events.target__port }}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
 
     }
   }
@@ -30491,7 +30496,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #ip_interrogation
@@ -30502,7 +30507,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode }}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #ip_interrogation
@@ -30513,14 +30518,14 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=target.port={{ events.target__port }} AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=target.port={{ events.target__port }} AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events__principal__ip.events__principal__ip'] %} AND (principal.ip=\"{{ _filters['events__principal__ip.events__principal__ip'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %}{% if _filters['events__target__ip.events__target__ip'] %} AND (target.ip=\"{{ _filters['events__target__ip.events__target__ip'] | replace:',','\" OR target.ip=\"'}}\"){% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   measure: target_ips_count {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND network.http.method=\"{{events.network__http__method}}\" AND target.url=\"{{events.target__url}}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND network.http.method=\"{{events.network__http__method}}\" AND target.url=\"{{events.target__url}}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #SSH_inferences
@@ -30531,7 +30536,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.summary=\"{{ events__security_result.summary | url_encode }}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.summary=\"{{ events__security_result.summary | url_encode }}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #SSH_inferences
@@ -30541,7 +30546,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.summary=\"{{ events__security_result.summary | url_encode }}\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND security_result.summary=\"{{ events__security_result.summary | url_encode }}\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #SSH_inferences
@@ -30549,7 +30554,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\"AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND (security_result.summary=/{{ security_result_summary_derived.summary_derived | replace: ' , ','/) AND (security_result.summary=/' | url_encode }}/)&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\"AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND (security_result.summary=/{{ security_result_summary_derived.summary_derived | replace: ' , ','/) AND (security_result.summary=/' | url_encode }}/){% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #SSH_inferences
@@ -30557,7 +30562,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\"AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND principal.labels[\"hassh\"]=\"{{ events__principal__labels__hassh.value }}\" AND target.labels[\"hassh_server\"]=\"{{ events__target__labels__hassh_server.value }}\"{% if _filters['events__security_result.summary_for_filter'] %} AND security_result.summary={{ _filters['events__security_result.summary_for_filter'] | replace:'\"','' | remove:'%' | append:'/' | prepend:'/' | url_encode }}{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\"AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND principal.labels[\"hassh\"]=\"{{ events__principal__labels__hassh.value }}\" AND target.labels[\"hassh_server\"]=\"{{ events__target__labels__hassh_server.value }}\"{% if _filters['events__security_result.summary_for_filter'] %} AND security_result.summary={{ _filters['events__security_result.summary_for_filter'] | replace:'\"','' | remove:'%' | append:'/' | prepend:'/' | url_encode }}{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #SSH_inferences
@@ -30565,7 +30570,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\"AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.detection_fields[\"host_key\"]=\"{{ events__security_result__detection_fields_host_key.value }}\" AND (security_result.summary=/{{ security_result_summary_derived.summary_derived | replace: ' , ','/) AND (security_result.summary=/' | url_encode }}/)&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\"AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.detection_fields[\"host_key\"]=\"{{ events__security_result__detection_fields_host_key.value }}\" AND (security_result.summary=/{{ security_result_summary_derived.summary_derived | replace: ' , ','/) AND (security_result.summary=/' | url_encode }}/){% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #dns
@@ -30574,10 +30579,10 @@ view: events {
     label: "Count"
     type: count
     html:<p>Count: {{ value }}
-    </p>;;
+      </p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"qtype_name\"]=\"{{ events__about__labels__qtype_name.value }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"qtype_name\"]=\"{{ events__about__labels__qtype_name.value }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #dns
@@ -30585,7 +30590,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip | url_encode}}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}{% if _filters['events__about__labels__qtype_name.value_for_filter'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['events__about__labels__qtype_name.value_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{ events__principal__ip.events__principal__ip | url_encode}}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}{% if _filters['events__about__labels__qtype_name.value_for_filter'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['events__about__labels__qtype_name.value_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #dns
@@ -30593,7 +30598,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.dns.questions.name=\"{{ events__network__dns__questions.name | url_encode}}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}{% if _filters['events__about__labels__qtype_name.value_for_filter'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['events__about__labels__qtype_name.value_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} AND about.labels[\"qtype_name\"] = \"PTR\" AND about.labels[\"rcode_name\"] = \"NOERROR\" AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.dns.questions.name=\"{{ events__network__dns__questions.name | url_encode}}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}{% if _filters['events__about__labels__qtype_name.value_for_filter'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['events__about__labels__qtype_name.value_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} AND about.labels[\"qtype_name\"] = \"PTR\" AND about.labels[\"rcode_name\"] = \"NOERROR\" AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #dns
@@ -30601,7 +30606,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.dns.questions.name=\"{{ events__network__dns__questions.name | url_encode}}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}{% if _filters['events__about__labels__qtype_name.value_for_filter'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['events__about__labels__qtype_name.value_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} AND about.labels[\"qtype_name\"] = \"PTR\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND network.dns.questions.name=\"{{ events__network__dns__questions.name | url_encode}}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.target__port__intel'] %} AND (target.port={{ _filters['events.target__port__intel'] | url_encode }}){% else %}{% endif %}{% if _filters['events__about__labels__qtype_name.value_for_filter'] %} AND about.labels[\"qtype_name\"]=\"{{ _filters['events__about__labels__qtype_name.value_for_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} AND about.labels[\"qtype_name\"] = \"PTR\" AND about.labels[\"rcode_name\"] = \"NXDOMAIN\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30613,7 +30618,7 @@ view: events {
     html:<p>Count: {{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND target.asset.software.name=\"{{ events__target__asset__software.name | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}{% if _filters['events__target__asset__software.description'] %} AND target.asset.software.description=\"{{ _filters['events__target__asset__software.description'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND target.asset.software.name=\"{{ events__target__asset__software.name | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}{% if _filters['events__target__asset__software.description'] %} AND target.asset.software.description=\"{{ _filters['events__target__asset__software.description'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #software
@@ -30621,7 +30626,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND target.asset.software.name=\"{{ events__target__asset__software.name | url_encode }}\" AND target.asset.software.version=\"{{ events.software_version | split: '.' | first | url_encode }}\" AND target.asset.attribute.labels[\"version_minor\"]=\"{{ events.software_version | split: '.' | last | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}{% if _filters['events__target__asset__software.description'] %} AND target.asset.software.description=\"{{ _filters['events__target__asset__software.description'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND target.asset.software.name=\"{{ events__target__asset__software.name | url_encode }}\" AND target.asset.software.version=\"{{ events.software_version | split: '.' | first | url_encode }}\" AND target.asset.attribute.labels[\"version_minor\"]=\"{{ events.software_version | split: '.' | last | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}{% if _filters['events__target__asset__software.description'] %} AND target.asset.software.description=\"{{ _filters['events__target__asset__software.description'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #software
@@ -30629,7 +30634,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND target.asset.software.description=\"{{ events__target__asset__software.description | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND target.asset.software.description=\"{{ events__target__asset__software.description | url_encode }}\"{% if _filters['events.observer__hostname_for_filter'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname_for_filter'] | replace:'\"',''  | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30642,7 +30647,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\" AND security_result.category_details = \"{{events__security_result__category_details.events__security_result__category_details}}\"  {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['security_result_severity_details__filter'] %} AND security_result.severity_details=\"{{ _filters['security_result_severity_details__filter'] }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\" AND security_result.category_details = \"{{events__security_result__category_details.events__security_result__category_details}}\"  {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['security_result_severity_details__filter'] %} AND security_result.severity_details=\"{{ _filters['security_result_severity_details__filter'] }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30650,7 +30655,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\"  {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['security_result_severity_details__filter'] %} AND security_result.severity_details=\"{{ _filters['security_result_severity_details__filter'] }}\"{% else %}{% endif %} {% if _filters['security_result_category_details__filter'] %} AND security_result.category_details=\"{{ _filters['security_result_category_details__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\"  {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['security_result_severity_details__filter'] %} AND security_result.severity_details=\"{{ _filters['security_result_severity_details__filter'] }}\"{% else %}{% endif %} {% if _filters['security_result_category_details__filter'] %} AND security_result.category_details=\"{{ _filters['security_result_category_details__filter'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30748,14 +30753,14 @@ view: events {
   #data-exploration-http
   measure: average_body_length {
     sql: CASE WHEN ${count_body_length} > 0 Then (${sum_body_length}/${count_body_length})
-    ELSE 0
-    END;;
+          ELSE 0
+          END;;
     group_label: "Http"
     group_item_label: "average Body Length"
     value_format: "0.00"
   }
 
- #data-exploration-http
+  #data-exploration-http
   measure: sum_user_agent_length {
     sql: SUM(LENGTH(${network__http__user_agent}));;
     group_label: "Http"
@@ -30770,8 +30775,8 @@ view: events {
   #data-exploration-http
   measure: average_user_agent_length {
     sql:CASE WHEN ${count_user_agent_length} > 0 Then (${sum_user_agent_length}/${count_user_agent_length})
-    ELSE 0
-    END;;
+          ELSE 0
+          END;;
     group_label: "Http"
     group_item_label: "Average User Agent Length"
     value_format: "0.00"
@@ -30790,7 +30795,7 @@ view: events {
     html:<p>Count:{{ value }}</p>;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"status_msg\"]=\"{{ events__about__labels__status__msg.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"status_msg\"]=\"{{ events__about__labels__status__msg.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30848,7 +30853,7 @@ view: events {
     group_item_label: "host_header_top"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} &startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30858,7 +30863,7 @@ view: events {
     group_item_label: "host_header_rare"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} &startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30868,7 +30873,7 @@ view: events {
     group_item_label: "host_header_method"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.network__http__method'] %} AND network.http.method=\"{{ _filters['events.network__http__method'] }}\"{% else %}{% endif %}{% if _filters['events.network__http__response_code__filter'] %} AND network.http.response_code={{ _filters['events.network__http__response_code__filter'] }}{% else %}{% endif %} &startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.network__http__method'] %} AND network.http.method=\"{{ _filters['events.network__http__method'] }}\"{% else %}{% endif %}{% if _filters['events.network__http__response_code__filter'] %} AND network.http.response_code={{ _filters['events.network__http__response_code__filter'] }}{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30878,7 +30883,7 @@ view: events {
     group_item_label: "host_header_status"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\" AND network.http.response_code={{events.network__http__response_code__filter}} AND about.labels[\"status_msg\"]=\"{{ events__about__labels__status__msg.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.network__http__method'] %} AND network.http.method=\"{{ _filters['events.network__http__method'] }}\"{% else %}{% endif %} &startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\" AND network.http.response_code={{events.network__http__response_code__filter}} AND about.labels[\"status_msg\"]=\"{{ events__about__labels__status__msg.value }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.network__http__method'] %} AND network.http.method=\"{{ _filters['events.network__http__method'] }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30888,7 +30893,7 @@ view: events {
     group_item_label: "http_user_agent_rare"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 #data-exploration-http
@@ -30898,7 +30903,7 @@ view: events {
     group_item_label: "local_host_outbound"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} &startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30908,7 +30913,7 @@ view: events {
     group_item_label: "http_user_agent_inbound"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 #data-exploration-http
@@ -30918,7 +30923,7 @@ view: events {
     group_item_label: "local_host_inbound"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} &startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{ events.metadata__vendor_name }}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.hostname=\"{{events.target__hostname}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #data-exploration-http
@@ -30928,7 +30933,7 @@ view: events {
     group_item_label: "http_user_agent_outbound"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=network.http.user_agent=\"{{ events.network__http__user_agent | url_encode}}\" AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   measure: principal_count_http {
@@ -30937,7 +30942,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND network.application_protocol=\"HTTP\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND network.application_protocol=\"HTTP\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -30957,7 +30962,7 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"service\"] = \"{{events__about__labels__service.value}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"service\"] = \"{{events__about__labels__service.value}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #Connections
@@ -30968,7 +30973,7 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.port = {{events.target__port}} {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.port = {{events.target__port}} {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #Connections
@@ -30979,7 +30984,7 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #Connections
@@ -30990,7 +30995,7 @@ view: events {
     html: <p>Count: {{value}}</p> ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31000,7 +31005,7 @@ view: events {
     sql:SUM(${TABLE}.network.sent_bytes) ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"true\" AND about.labels[\"local_resp\"]=\"false\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"true\" AND about.labels[\"local_resp\"]=\"false\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31009,7 +31014,7 @@ view: events {
     sql:SUM(${TABLE}.network.sent_bytes) ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"false\" AND about.labels[\"local_resp\"]=\"true\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"false\" AND about.labels[\"local_resp\"]=\"true\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31018,7 +31023,7 @@ view: events {
     sql: IFNULL(AVG(${TABLE}.network.session_duration.seconds),0)  ;;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"uid\"]=\"{{events__about__labels.value}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"uid\"]=\"{{events__about__labels.value}}\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31038,7 +31043,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.file.mime_type=\"{{events__about.file__mime_type}}\" AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.file.mime_type=\"{{events__about.file__mime_type}}\" AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31048,7 +31053,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.file.mime_type=\"{{events__about.file__mime_type}}\" AND about.file.names=\"{{events__about__file__names.events__about__file__names}}\" AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.file.mime_type=\"{{events__about.file__mime_type}}\" AND about.file.names=\"{{events__about__file__names.events__about__file__names}}\" AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31060,7 +31065,7 @@ view: events {
     Count:{{ value }};;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"source\"]=\"{{events__about__labels__source__files.value}}\" AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND about.labels[\"source\"]=\"{{events__about__labels__source__files.value}}\" AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31070,7 +31075,7 @@ view: events {
     label: "Count"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31078,7 +31083,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31086,7 +31091,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.ip=\"{{events__target__ip.events__target__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.ip=\"{{events__target__ip.events__target__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31095,7 +31100,7 @@ view: events {
     sql: SUM(${events__about.file__size});;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
   #files data exploration
@@ -31104,7 +31109,7 @@ view: events {
     sql: SUM(${events__about.file__size});;
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.ip=\"{{events__target__ip.events__target__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.vendor_name=\"{{events.metadata__vendor_name}}\"AND metadata.product_event_type=\"{{ events.metadata__product_event_type }}\"AND target.ip=\"{{events__target__ip.events__target__ip}}\"AND observer.hostname!=\"\"AND about.file.mime_type!=\"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events__about.file__mime_type_filter'] %} AND about.file.mime_type=\"{{ _filters['events__about.file__mime_type_filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31115,7 +31120,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"usage\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"usage\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31125,7 +31130,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"cpu\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"cpu\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31135,7 +31140,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"usage_os\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"usage_os\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31145,7 +31150,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"usage_data\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"usage_data\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31155,7 +31160,7 @@ view: events {
     value_format: "0.000"
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"cpu_1_temperature\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels.key = \"cpu_1_temperature\" {% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -106545,23 +106550,23 @@ view: events__about__labels__status__msg {
 view: conn_events_search_derived {
   derived_table: {
     sql:SELECT
-    events__about__labels__uid__only.value  AS conn_uids
-FROM `datalake.events` AS events
-LEFT JOIN UNNEST(events.about) as events__about
-LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
-LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
-LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
-WHERE (events.metadata.product_event_type ) = 'conn' AND (CASE
-          WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'true' THEN 'Internal'
-          WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'false' THEN 'External'
-          WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'false' THEN 'Inbound'
-          WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'true' THEN 'Outbound'
-        END ) IN ('Inbound', 'Internal') AND (events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL
-GROUP BY
-    1
-ORDER BY
-    1
-;;
+        events__about__labels__uid__only.value  AS conn_uids
+    FROM `datalake.events` AS events
+    LEFT JOIN UNNEST(events.about) as events__about
+    LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
+    LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
+    LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
+    WHERE (events.metadata.product_event_type ) = 'conn' AND (CASE
+              WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'true' THEN 'Internal'
+              WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'false' THEN 'External'
+              WHEN events__about__labels__local__resp.value = 'true'  AND events__about__labels__local__orig.value = 'false' THEN 'Inbound'
+              WHEN events__about__labels__local__resp.value = 'false'  AND events__about__labels__local__orig.value = 'true' THEN 'Outbound'
+            END ) IN ('Inbound', 'Internal') AND (events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL
+    GROUP BY
+        1
+    ORDER BY
+        1
+    ;;
   }
   dimension: conn_uids {
     sql: ${TABLE}.conn_uids;;
@@ -106599,19 +106604,19 @@ view: conn_events_search_derived_outbound {
 view: http_group_by_uid_src_dest {
   derived_table: {
     sql:SELECT
-    events__about__labels__uid.value  AS conn_uids,
-    events__principal__ip  AS events__principal__ip_events__principal__ip,
-    events__target__ip  AS events__target__ip_events__target__ip
-FROM `datalake.events` AS events
-LEFT JOIN UNNEST(events.about) as events__about
-LEFT JOIN UNNEST(events.target.ip) as events__target__ip
-LEFT JOIN UNNEST(events.principal.ip) as events__principal__ip
-LEFT JOIN UNNEST(labels) as events__about__labels__uid ON events__about__labels__uid.key IN ('uid', 'fuid')
-WHERE (events.metadata.vendor_name = "Corelight" ) AND (events.metadata.product_event_type = "http" ) AND (events.observer.hostname ) IS NOT NULL
-GROUP BY
-    1,
-    2,
-    3;;
+          events__about__labels__uid.value  AS conn_uids,
+          events__principal__ip  AS events__principal__ip_events__principal__ip,
+          events__target__ip  AS events__target__ip_events__target__ip
+      FROM `datalake.events` AS events
+      LEFT JOIN UNNEST(events.about) as events__about
+      LEFT JOIN UNNEST(events.target.ip) as events__target__ip
+      LEFT JOIN UNNEST(events.principal.ip) as events__principal__ip
+      LEFT JOIN UNNEST(labels) as events__about__labels__uid ON events__about__labels__uid.key IN ('uid', 'fuid')
+      WHERE (events.metadata.vendor_name = "Corelight" ) AND (events.metadata.product_event_type = "http" ) AND (events.observer.hostname ) IS NOT NULL
+      GROUP BY
+          1,
+          2,
+          3;;
   }
   dimension: conn_uids {
     sql: ${TABLE}.conn_uids;;
