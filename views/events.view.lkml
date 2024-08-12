@@ -27347,7 +27347,6 @@ view: events {
       WHEN ${ip_classification} = 'Internal' THEN 'Yes'
       WHEN ${ip_classification} = 'External' THEN 'No'
     END;;
-
   }
   dimension: target__ip_geo_artifact {
     hidden: yes
@@ -30651,7 +30650,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\"  {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['security_result_severity_details__filter'] %} AND security_result.severity_details=\"{{ _filters['security_result_severity_details__filter'] }}\"{% else %}{% endif %} {% if _filters['security_result_category_details__filter'] %} AND security_result.category_details=\"{{ _filters['security_result_category_details__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\"  {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['security_result_severity_details__filter'] %} AND security_result.severity_details=\"{{ _filters['security_result_severity_details__filter'] }}\"{% else %}{% endif %} {% if _filters['security_result_category_details__filter'] %} AND security_result.category_details=\"{{ _filters['security_result_category_details__filter'] | replace:'\"','' }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31001,7 +31000,7 @@ view: events {
     sql:SUM(${TABLE}.network.sent_bytes) ;;
     link: {
       label: "View in Chronicle"
-     url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"true\" AND about.labels[\"local_resp\"]=\"false\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"true\" AND about.labels[\"local_resp\"]=\"false\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
 
@@ -31012,7 +31011,7 @@ view: events {
       label: "View in Chronicle"
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND principal.ip = \"{{events__principal__ip.events__principal__ip}}\" AND target.ip = \"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol = \"{{events.protocol_string}}\" AND about.labels[\"local_orig\"]=\"false\" AND about.labels[\"local_resp\"]=\"true\" {% if _filters['principal__ip__filter'] %} AND (principal.ip=\"{{ _filters['principal__ip__filter'] | replace:',','\" OR principal.ip=\"' }}\"){% else %}{% endif %} {% if _filters['principal__port__filter'] %} AND (principal.port={{ _filters['principal__port__filter'] | replace:',',' OR principal.port=' }}){% else %}{% endif %} {% if _filters['target__ip__filter'] %} AND (target.ip=\"{{ _filters['target__ip__filter'] | replace:',','\" OR target.ip=\"' }}\"){% else %}{% endif %}{% if _filters['target__port__filter'] %} AND (target.port={{ _filters['target__port__filter'] | replace:',',' OR target.port=' }}){% else %}{% endif %}{% if _filters['about__labels__service__filter'] %} AND about.labels[\"service\"]=\"{{ _filters['about__labels__service__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['observer__hostname__filter'] %} AND observer.hostname=\"{{ _filters['observer__hostname__filter'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}AND principal.ip != \"0.0.0.0\" AND principal.ip != \"255.255.255.255\" AND target.ip != \"0.0.0.0\" AND target.ip != \"255.255.255.255\"&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
- }
+  }
 
   measure: avg_duration {
     type: number
@@ -31304,6 +31303,93 @@ view: events {
       label: "View in Chronicle"
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND {% if auth_result._value == 'Failure' %} about.labels[\"auth_success\"]=\"false\"{% else %} about.labels[\"auth_success\"]=\"true\" {% endif %} {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
+  }
+  #Remote Activity Insights - RDP Authentication Attempts
+  dimension: auth_result_insights {
+    type: string
+    sql: CASE
+            WHEN ${events__about__labels__result.value} = 'Success' THEN 'Success'
+            WHEN ${events__about__labels__result.value} = 'SSL_NOT_ALLOWED_BY_SERVER' THEN 'Failure'
+            WHEN ${events__about__labels__auth__success.value} = 'true' THEN 'Success'
+            WHEN ${events__about__labels__auth__success.value} = 'false' THEN 'Failure'
+            ELSE 'Unknown'
+         END;;
+  }
+  #Remote Activity Insights - RDP Authentication Attempts
+  measure: rdp_authentication_attempts_insights_count {
+    type: number
+    sql: CASE
+            WHEN ${metadata_id_count} IS NOT NULL THEN ${metadata_id_count}
+            ELSE 0
+         END;;
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND {% if auth_result_insights._value == 'Failure' %} (about.labels[\"result\"]=\"SSL_NOT_ALLOWED_BY_SERVER\" OR about.labels[\"auth_success\"]=\"false\") {% else %} (about.labels[\"auth_success\"]=\"true\" OR about.labels[\"result\"]=\"Success\") {% endif %} {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+  }
+
+  # Remote Activity Insights - Identify Failed RDP Logins
+  measure: identify_failed_rdp_login_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND about.labels[\"cookie\"]=\"{{events__about__labels__cookie.value}}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"auth_success\"]=\"{{events__about__labels__auth__success.value}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Remote Activity Insights - Combine results (Identify Failed RDP Logins)
+  measure: combine_results_vpn {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${events__about__labels__result.value} IGNORE NULLS), ', ');;
+  }
+
+  # Remote Activity Insights - Unusual Remote Activity
+  measure: unusual_remote_activity_count {
+    type: count_distinct
+    sql: CONCAT(${events__target__ip.events__target__ip}, ${events__principal__ip.events__principal__ip}, ${events__about__labels__inferences_vpn.value}, ${events__about__labels__vpn__type.value}) ;;
+  }
+
+  # Remote Activity Insights - Unusual Remote Activity Table
+  measure: unusual_remote_activity_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND about.labels[\"inference\"]=\"{{events__about__labels__inferences_vpn.value}}\" AND about.labels[\"vpn_type\"]=\"{{events__about__labels__vpn__type.value}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Remote Activity Insights - Suspected Data Exfiltration
+  measure: suspected_data_exfiltration_count {
+    type: count_distinct
+    sql: CONCAT(${events__target__ip.events__target__ip}, ${events__principal__ip.events__principal__ip}) ;;
+  }
+
+  # Remote Activity Insights - Combine Inferences
+  measure: values_inference_vpn {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${events__about__labels__inferences_vpn.value} IGNORE NULLS), ':');;
+  }
+
+  # Remote Activity Insights - Suspected Data Exfiltration Table
+  measure: suspected_data_exfiltration_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND target.location.country_or_region=\"{{target__location__country_or_region}}\" AND about.labels[\"vpn_type\"]=\"{{events__about__labels__vpn__type.value}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  # Remote Activity Insights - Possible Unauthorized Remote Access Attempts
+  measure: possible_unauthorized_remote_external_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND network.ip_protocol=\"{{protocol_string}}\" AND target.port={{target__port | int}} AND network.sent_bytes={{network__sent_bytes | int}} {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
 
   # ----- Sets of fields for drilling ------
@@ -54596,7 +54682,7 @@ view: events__about__labels__connecting__user {
 }
 
 view: events__about__labels__inferences {
-    dimension: key {
+  dimension: key {
     type: string
     sql: ${TABLE}.key ;;
   }
@@ -54851,6 +54937,30 @@ view: events__about__labels__auth__success {
   dimension: source {
     type: string
     sql: ${TABLE}.source ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+# Remote Activity Insights
+view: events__about__labels__cookie {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+# Remote Activity Insights
+view: events__about__labels__result {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
   }
   dimension: value {
     type: string
