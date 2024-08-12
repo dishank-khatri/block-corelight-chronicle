@@ -170,6 +170,7 @@
       events.combine_results_vpn, count_of_metadata_id, events.identify_failed_rdp_login_external_link]
     filters:
       events.metadata__product_event_type: rdp
+      events__about__labels__cookie.value: "-NULL"
     sorts: [count_of_metadata_id desc]
     limit: 5000
     column_limit: 50
@@ -181,8 +182,8 @@
       label: Count of Metadata ID
       measure: count_of_metadata_id
       type: count_distinct
-    filter_expression: (${events__about__labels__auth__success.value} = "false" OR
-      ${events__about__labels__cookie.value} = "SSL_NOT_ALLOWED_BY_SERVER")
+    filter_expression: ${events__about__labels__auth__success.value} = "false" OR
+      ${events__about__labels__cookie.value} = "SSL_NOT_ALLOWED_BY_SERVER"
     show_view_names: false
     show_row_numbers: true
     transpose: false
@@ -207,7 +208,7 @@
       events__about__labels__cookie.value: User
       events__principal__ip.events__principal__ip: Source
       events__target__ip.events__target__ip: Destination
-      events__about__labels__auth__success.value: Auth_Success?
+      events__about__labels__auth__success.value: Auth Success?
       count_of_metadata_id: Count
       events__about__labels__result.value: Result
       events.identify_failed_rdp_login_external_link: Raw Logs
@@ -319,7 +320,7 @@
     height: 3
   - type: button
     name: button_1642
-    rich_content_json: '{"text":"For Further Investigations -- VPN Inferences   →","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8"}'
+    rich_content_json: '{"text":"For Further Investigations -- VPN Inferences   →","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__vpn_insights"}'
     row: 11
     col: 17
     width: 7
@@ -423,7 +424,7 @@
       count_of_metadata_id: Count
       events__principal__ip.events__principal__ip: Source IP
       events__target__ip.events__target__ip: Responder
-      events__about__labels__inferences_vpn.value: inferences
+      events__about__labels__inferences_vpn.value: Inferences
       events__about__labels__vpn__type.value: VPN Type
       events.unusual_remote_activity_external_link: Raw Logs
     series_cell_visualizations:
@@ -515,6 +516,8 @@
     filters:
       events.metadata__product_event_type: vpn
       events__about__labels__inferences_vpn.value: COM,NSP,RW
+      events__principal__ip.events__principal__ip: "-NULL"
+      events__target__ip.events__target__ip: "-NULL"
     sorts: [events__principal__ip.events__principal__ip]
     limit: 5000
     column_limit: 50
@@ -641,7 +644,7 @@
       events__target__ip.events__target__ip: Destination
       events.protocol_string: Proto
       events__about__labels__inferences_vpn.value: Inferences
-      events.target__port: dest_port
+      events.target__port: Destination Port
       events.network__sent_bytes: Bytes
       count_of_value_2: Count
       events.possible_unauthorized_remote_external_link: Raw Logs
