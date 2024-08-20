@@ -1259,6 +1259,29 @@ view: events {
     group_label: "Network Tls"
     group_item_label: "Cipher"
   }
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  measure: cipher_count {
+    type: count_distinct
+    sql: ${network__tls__cipher} ;;
+    group_label: "Network Tls"
+    group_item_label: "Cipher Count"
+  }
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  measure: formatted_cipher_count {
+    type: string
+    sql:
+    CASE
+        WHEN ${cipher_count} > 999 THEN
+            CASE
+                WHEN ROUND(${cipher_count}/1000)*1000 = ${cipher_count} THEN CONCAT(CAST(ROUND(${cipher_count}/1000) AS STRING), 'K')
+                WHEN MOD(${cipher_count}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${cipher_count}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${cipher_count}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${cipher_count} AS STRING)
+    END;;
+    group_label: "Network Tls"
+    group_item_label: "Cipher Formatted Count"
+  }
   dimension: network__tls__client__certificate__issuer {
     type: string
     sql: ${TABLE}.network.tls.client.certificate.issuer ;;
@@ -31150,6 +31173,353 @@ view: events {
       label: "View in Chronicle"
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{ events.metadata__vendor_name }}\" AND {% if auth_result._value == 'Failure' %} about.labels[\"auth_success\"]=\"false\"{% else %} about.labels[\"auth_success\"]=\"true\" {% endif %} {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
+  }
+
+  #Secure Channel Insights - Less Secure Ciphers
+  dimension: match_cipher {
+    type: yesno
+    sql: REGEXP_CONTAINS(${network__tls__cipher}, r"(RC4|DES|3DES|MD5|NULL|EXPORT)") OR ${network__tls__cipher} IS NULL;;
+  }
+
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  measure: last_target_ip {
+    type: string
+    sql: ARRAY_AGG(${events__target__ip.events__target__ip} ORDER BY ${event_timestamp_time} DESC LIMIT 1)[OFFSET(0)] ;;
+  }
+
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  dimension: direction_less_secure_cipher {
+    type: string
+    sql: CASE
+            WHEN ${is_ip_internal_external.is_src_internal} = 'true' AND ${is_ip_internal_external.is_dest_internal} = 'false' THEN 'Outbound'
+            ELSE 'Inbound'
+         END;;
+  }
+
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  measure: values_direction_less_secure_cipher {
+    type: string
+    sql: ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${direction_less_secure_cipher} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  measure: values_host_type_less_secure_cipher {
+    type: string
+    sql: ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${is_ip_internal_external.src_host_type} IGNORE NULLS), ',') ;;
+  }
+
+  #Secure Channel Insights - Connections using Less Secure TLS Versions (< TLS1.2)
+  dimension: tls_version_dest_internal {
+    type: string
+    sql: CASE
+            WHEN ${is_ip_internal_external.is_dest_internal} = 'true' THEN 'true'
+            ELSE 'false'
+         END;;
+
+  }
+  #Secure Channel Insights - Connections using Less Secure TLS Versions (< TLS1.2)
+  dimension: tls_version_src_internal {
+    type: string
+    sql: CASE
+            WHEN ${is_ip_internal_external.is_src_internal} = 'true' THEN 'true'
+            ELSE 'false'
+         END;;
+  }
+
+  #Secure Channel Insights - Connections using Less Secure TLS Versions (< TLS1.2)
+  dimension: connection_type {
+    type: string
+    sql: CASE
+            WHEN ${tls_version_src_internal} = 'true' AND ${tls_version_dest_internal} = 'false' THEN 'Outbound'
+            WHEN ${tls_version_src_internal} = 'false' AND ${tls_version_dest_internal} = 'true' THEN 'Inbound'
+            WHEN ${tls_version_src_internal} = 'true' AND ${tls_version_dest_internal} = 'true' THEN 'Internal'
+            WHEN ${tls_version_src_internal} = 'false' AND ${tls_version_dest_internal} = 'false' THEN 'EEther'
+         END;;
+  }
+
+  #Secure Channel Insights - Network Evidence for All TLS versions seen
+  measure: values_ip_classification {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${is_ip_internal_external.dest_host_type} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Network Evidence for Self Signed Internal Certificates
+  dimension: traffic_direction {
+    type: string
+    sql: CASE
+            WHEN ${is_ip_internal_external.src_host_type} = 'Internal' AND ${is_ip_internal_external.dest_host_type} = 'External' THEN 'Outbound'
+            WHEN ${is_ip_internal_external.src_host_type} = 'External' AND ${is_ip_internal_external.dest_host_type} = 'Internal' THEN 'Inbound'
+            WHEN ${is_ip_internal_external.src_host_type} = 'Internal' AND ${is_ip_internal_external.dest_host_type} = 'Internal' THEN 'East-West'
+            WHEN ${is_ip_internal_external.src_host_type} = 'External' AND ${is_ip_internal_external.dest_host_type} = 'External' THEN 'Ether'
+            ELSE 'Undefined'
+         END;;
+  }
+
+  #Secure Channel Insights - Network Evidence for Self Signed Internal Certificates
+  measure: values_traffic_direction {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${traffic_direction} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights
+  dimension: inference {
+    type: string
+    sql: CASE WHEN ${events__security_result.summary} = 'Client Authentication Bypass' THEN 'ABP'
+              WHEN ${events__security_result.summary} = 'SSH Agent Forwarding Requested' THEN 'AFR'
+              WHEN ${events__security_result.summary} = 'Automated Password Authentication' THEN 'APWA'
+              WHEN ${events__security_result.summary} = 'Automated Interaction' THEN 'AUTO'
+              WHEN ${events__security_result.summary} = 'Server Banner' THEN 'BAN'
+              WHEN ${events__security_result.summary} = 'Client Brute Force Guessing' THEN 'BF'
+              WHEN ${events__security_result.summary} = 'Client Brute Force Success' THEN 'BFS'
+              WHEN ${events__security_result.summary} = 'Client Trusted Server' THEN 'CTS'
+              WHEN ${events__security_result.summary} = 'Client Untrusted Server' THEN 'CUS'
+              WHEN ${events__security_result.summary} = 'Interactive Password Authentication' THEN 'IPWA'
+              WHEN ${events__security_result.summary} = 'Keystrokes' THEN 'KS'
+              WHEN ${events__security_result.summary} = 'Large Client File Donwload' THEN 'LFD'
+              WHEN ${events__security_result.summary} = 'Large Client File Upload' THEN 'LFU'
+              WHEN ${events__security_result.summary} = 'Multifactor Authentication' THEN 'MFA'
+              WHEN ${events__security_result.summary} = 'None Authentication' THEN 'NA'
+              WHEN ${events__security_result.summary} = 'No Remote Command' THEN 'NRC'
+              WHEN ${events__security_result.summary} = 'Public Key Authentication' THEN 'PKA'
+              WHEN ${events__security_result.summary} = 'Reverse SSH Initiated' THEN 'RSI'
+              WHEN ${events__security_result.summary} = 'Reverse SSH Initiated Automate' THEN 'RSIA'
+              WHEN ${events__security_result.summary} = 'Reverse SSH Keystrokes' THEN 'RSK'
+              WHEN ${events__security_result.summary} = 'Reverse SSH Logged In' THEN 'RSL'
+              WHEN ${events__security_result.summary} = 'Reverse SSH Providioned' THEN 'RSP'
+              WHEN ${events__security_result.summary} = 'Authentication Scanning' THEN 'SA'
+              WHEN ${events__security_result.summary} = 'Capabilities Scanning' THEN 'SC'
+              WHEN ${events__security_result.summary} = 'Small Client File Download' THEN 'SFD'
+              WHEN ${events__security_result.summary} = 'Small Client File Upload' THEN 'SFU'
+              WHEN ${events__security_result.summary} = 'Other Scanning' THEN 'SP'
+              WHEN ${events__security_result.summary} = 'Version Scanning' THEN 'SV'
+              WHEN ${events__security_result.summary} = 'Unknown Authentication' THEN 'UA'
+              END ;;
+  }
+
+  #Secure Channel Insights
+  measure: values_inference {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${inference} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Automated SSH Session Indicators
+  measure: values_target_ip {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${events__target__ip.events__target__ip} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Automated SSH Session Indicators
+  measure: values_prinicpal_ip {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${events__principal__ip.events__principal__ip} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Certificates about to Expire
+  measure: values_target_port {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT CAST(${target__port} AS STRING) IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Automated SSH Session Indicators
+  measure: values_description {
+    type: string
+    sql:  ARRAY_TO_STRING(ARRAY_AGG(DISTINCT ${events__security_result.description} IGNORE NULLS), ',');;
+  }
+
+  #Secure Channel Insights - Connections using Less Secure TLS Versions
+  measure: connections_using_less_secure_tls_versions {
+    type: count_distinct
+    sql:CONCAT(${events__principal__ip.events__principal__ip}, ${events__target__ip.events__target__ip}, ${events__about__labels__uid__only.value});;
+  }
+
+  #Secure Channel Insights - Connections using Less Secure TLS Versions
+  measure: formatted_connections_using_less_secure_tls_versions {
+    type: string
+    sql:
+    CASE
+        WHEN ${connections_using_less_secure_tls_versions} > 999 THEN
+            CASE
+                WHEN ROUND(${connections_using_less_secure_tls_versions}/1000)*1000 = ${connections_using_less_secure_tls_versions} THEN CONCAT(CAST(ROUND(${connections_using_less_secure_tls_versions}/1000) AS STRING), 'K')
+                WHEN MOD(${connections_using_less_secure_tls_versions}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${connections_using_less_secure_tls_versions}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${connections_using_less_secure_tls_versions}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${connections_using_less_secure_tls_versions} AS STRING)
+    END;;
+  }
+
+  #Secure Channel Insights - Interactive Sessions Keystrokes
+  measure: interactive_sessions_keystrokes {
+    type: count_distinct
+    sql:CONCAT(${events__about__labels__uid__only.value}, ${events__principal__ip.events__principal__ip}, ${events__target__ip.events__target__ip},${inference});;
+  }
+
+  #Secure Channel Insights - Self Signed Certs
+  measure: self_signed_certs {
+    type: count_distinct
+    sql: CONCAT(${network__tls__client__server_name}, ${events__target__ip.events__target__ip});;
+  }
+
+  #Secure Channel Insights - Self Signed Certs
+  measure: formatted_self_signed_certs {
+    type: string
+    sql:
+    CASE
+        WHEN ${self_signed_certs} > 999 THEN
+            CASE
+                WHEN ROUND(${self_signed_certs}/1000)*1000 = ${self_signed_certs} THEN CONCAT(CAST(ROUND(${self_signed_certs}/1000) AS STRING), 'K')
+                WHEN MOD(${self_signed_certs}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${self_signed_certs}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${self_signed_certs}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${self_signed_certs} AS STRING)
+    END;;
+  }
+
+  #Secure Channel Insights - Potential Security Risks
+  measure: potential_security_risks {
+    type: count_distinct
+    sql: CONCAT(${events__about__labels__uid__only.value}, ${events__principal__ip.events__principal__ip}, ${events__target__ip.events__target__ip});;
+  }
+
+  #Secure Channel Insights - Potential Security Risks
+  measure: formatted_potential_security_risks {
+    type: string
+    sql:
+    CASE
+        WHEN ${potential_security_risks} > 999 THEN
+            CASE
+                WHEN ROUND(${potential_security_risks}/1000)*1000 = ${potential_security_risks} THEN CONCAT(CAST(ROUND(${potential_security_risks}/1000) AS STRING), 'K')
+                WHEN MOD(${potential_security_risks}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${potential_security_risks}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${potential_security_risks}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${potential_security_risks} AS STRING)
+    END;;
+  }
+
+  #Secure Channel Insights - Certificates about to Expire
+  measure: certificates_about_to_expire {
+    type: count_distinct
+    sql:CONCAT(${x509_events_only.subject}, ${events__target__ip.events__target__ip});;
+  }
+
+  #Secure Channel Insights - Certificates about to Expire
+  measure: formatted_certificates_about_to_expire {
+    type: string
+    sql:
+    CASE
+        WHEN ${certificates_about_to_expire} > 999 THEN
+            CASE
+                WHEN ROUND(${certificates_about_to_expire}/1000)*1000 = ${certificates_about_to_expire} THEN CONCAT(CAST(ROUND(${certificates_about_to_expire}/1000) AS STRING), 'K')
+                WHEN MOD(${certificates_about_to_expire}, 1000) <= 100 THEN CONCAT(CAST(FLOOR(${certificates_about_to_expire}/1000) AS STRING), 'K')
+                ELSE CONCAT(CAST(ROUND(${certificates_about_to_expire}/1000, 1) AS STRING), 'K')
+            END
+        ELSE CAST(${certificates_about_to_expire} AS STRING)
+    END;;
+  }
+
+  #Secure Channel Insights - Weak Certs. Used Internally
+  measure: weak_certs_used_internally {
+    type: count_distinct
+    sql:CONCAT(${network__tls__client__server_name}, ${events__target__ip.events__target__ip}, ${target__port}, ${x509_events_only.certificate_key_length}, ${is_ip_internal_external.dest_host_type});;
+  }
+
+  #Secure Channel Insights - Network Evidence for Weak Key Length Certs
+  measure: weak_key_length_certs_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.client.server_name=\"{{ network__tls__client__server_name }}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND target.port={{ target__port }}{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - Less Secure Ciphers seen in the period
+  measure: less_secure_cipher_seen_in_the_period_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.cipher=\"{{ network__tls__cipher | url_encode }}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - Network Evidence for All TLS versions seen
+  measure: all_tls_versions_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.version=\"{{ network__tls__version | url_encode }}\" AND target.ip != \"\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - Network Evidence for Interactive Sessions and Keystrokes - SSH Inferences
+  measure: interactive_sessions_and_keystrokes_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.summary=\"{{ events__security_result.summary | url_encode }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - Network Evidence for Self Signed Internal Certificates - Self Signed Certs
+  measure: self_signed_certs_table_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.client.server_name=\"{{ network__tls__client__server_name }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.detection_fields[\"validation_status\"]=\"self signed certificate\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - Possible File Transfer
+  measure: possible_file_transfer_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.summary=\"{{ events__security_result.summary }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - Network Evidence for Self Signed Internal Certificates - Certificates About to Expire
+  measure: cert_about_to_expire_table_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.client.server_name=\"{{ network__tls__client__server_name }}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - SSH Inferences for Potential Security Risks
+  measure: ssh_inferences_for_potential_security_risks_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{events__principal__ip.events__principal__ip}}\" AND target.ip=\"{{events__target__ip.events__target__ip}}\" AND (security_result.summary=\"Capabilities Scanning\" OR security_result.summary=\"Other Scanning\" OR security_result.summary=\"Version Scanning\" OR security_result.summary=\"Authentication Scanning\" OR security_result.summary=\"SSH Agent Forwarding Requested\" OR security_result.summary=\"Server Banner\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - SSH Session Inferences
+  measure: ssh_session_inferences_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND (security_result.summary=\"Public Key Authentication\" OR security_result.summary=\"Automated Interaction\" OR security_result.summary=\"Keystrokes\" OR security_result.summary=\"Client Trusted Server\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
+  }
+
+  #Secure Channel Insights - SSH Advanced Threats Infereces
+  measure: ssh_advance_threat_inferences_link {
+    type: count
+    link: {
+      label: "View in Chronicle"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.summary=\"{{ events__security_result.summary }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+    }
+    html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
 
   # ----- Sets of fields for drilling ------
@@ -106344,6 +106714,56 @@ GROUP BY
   }
 }
 
+#Secure Channel Insights
+view: is_ip_internal_external {
+  derived_table: {
+    sql:SELECT
+          events__about__labels__uid__only.value  AS conn_uids,
+          events__about__labels__local__resp.value AS dest_internal,
+          events__about__labels__local__orig.value AS src_internal
+      FROM `datalake.events` AS events
+      LEFT JOIN UNNEST(events.about) as events__about
+      LEFT JOIN UNNEST(labels) as events__about__labels__uid__only ON events__about__labels__uid__only.key = 'uid'
+      LEFT JOIN UNNEST(labels) as events__about__labels__local__orig ON events__about__labels__local__orig.key = 'local_orig'
+      LEFT JOIN UNNEST(labels) as events__about__labels__local__resp ON events__about__labels__local__resp.key = 'local_resp'
+      WHERE (events.metadata.product_event_type ) = 'conn' AND (events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname ) IS NOT NULL
+      GROUP BY
+          1,
+          2,
+          3
+      ORDER BY
+          1
+      ;;
+  }
+  dimension: conn_uids {
+    sql: ${TABLE}.conn_uids;;
+  }
+  dimension: is_src_internal {
+    type: string
+    sql: ${TABLE}.src_internal;;
+  }
+  dimension: is_dest_internal {
+    type: string
+    sql: ${TABLE}.dest_internal;;
+  }
+  dimension: src_host_type {
+    type: string
+    sql: CASE
+            WHEN ${is_src_internal} = 'true' THEN 'Internal'
+            WHEN ${is_src_internal} = 'false' THEN 'External'
+            ELSE 'Unknown'
+         END;;
+  }
+  dimension: dest_host_type {
+    type: string
+    sql: CASE
+            WHEN ${is_dest_internal} = 'true' THEN 'Internal'
+            WHEN ${is_dest_internal} = 'false' THEN 'External'
+            ELSE 'Unknown'
+         END;;
+  }
+}
+
 
 #Security Posture - Self Signed Certs
 view: events__security_result__detection_fields_validation_status {
@@ -106394,5 +106814,66 @@ view: events__about__labels_viz_stats {
   dimension: value {
     type: string
     sql: ${TABLE}.value ;;
+  }
+}
+
+#Secure Channel Insights
+view: events__target__labels_cert_chain_fps {
+  dimension: key {
+    type: string
+    sql: ${TABLE}.key ;;
+  }
+  dimension: value {
+    type: string
+    sql: ${TABLE}.value ;;
+  }
+}
+
+# Secure Channel Insights
+view: x509_events_only {
+  derived_table: {
+    sql:  SELECT
+              events__about__labels_fingerprint.value  AS events__about__labels_fingerprint_value,
+              SAFE_CAST(events__about__labels_certificate_key_length.value AS  INT64)  AS events__about__labels_certificate_key_length,
+              events.network.tls.server.certificate.not_after.seconds AS not_valid_after,
+              events.network.tls.server.certificate.subject AS network__tls__server__certificate__subject
+          FROM `datalake.events` AS events
+          LEFT JOIN UNNEST(events.about) as events__about
+          LEFT JOIN UNNEST(labels) as events__about__labels_certificate_key_length ON events__about__labels_certificate_key_length.key = 'certificate_key_length'
+          LEFT JOIN UNNEST(labels) as events__about__labels_fingerprint ON events__about__labels_fingerprint.key = 'fingerprint'
+          WHERE (events.metadata.product_event_type ) = 'x509' AND (events.metadata.vendor_name = "Corelight" ) AND (events.observer.hostname) IS NOT NULL
+          GROUP BY
+              1,
+              2,
+              3,
+              4;;
+  }
+
+  dimension: fingerprint {
+    type: string
+    sql: ${TABLE}.events__about__labels_fingerprint_value ;;
+  }
+  dimension: certificate_key_length {
+    type: number
+    sql: ${TABLE}.events__about__labels_certificate_key_length ;;
+  }
+  dimension: cert_not_valid_after {
+    sql: FORMAT_TIMESTAMP("%Y-%m-%dT%H:%M:%SZ",TIMESTAMP_SECONDS(${TABLE}.not_valid_after),"UTC") ;;
+  }
+  dimension: cert_day_to_expire {
+    type: number
+    sql: ROUND((UNIX_SECONDS(TIMESTAMP(${cert_not_valid_after})) - UNIX_SECONDS(TIMESTAMP(FORMAT_TIMESTAMP("%Y-%m-%dT%H:%M:%SZ",CURRENT_TIMESTAMP(),"UTC")))) / 86400, 0) ;;
+  }
+  dimension: subject {
+    type: string
+    sql: ${TABLE}.network__tls__server__certificate__subject ;;
+  }
+  measure: max_cert_not_valid_after {
+    type: string
+    sql:  MAX(${cert_not_valid_after});;
+  }
+  measure: max_cert_day_to_expire {
+    type: max
+    sql:  ${cert_day_to_expire};;
   }
 }

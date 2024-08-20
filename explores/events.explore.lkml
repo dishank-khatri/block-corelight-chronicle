@@ -767,6 +767,13 @@ explore: events {
     sql_on: ${events__about__labels__uid.value} = ${http_group_by_uid_src_dest.conn_uids} ;;
     relationship: one_to_one
   }
+  #Secure Channel Insights
+  join: is_ip_internal_external {
+    view_label: "Events: UID with filtered on conn type event"
+    type: left_outer
+    sql_on: ${events__about__labels__uid__only.value} = ${is_ip_internal_external.conn_uids} ;;
+    relationship: one_to_one
+  }
   #data-exploration-http
   join: events__about__labels__status__msg {
     view_label: "Events: About Labels status msg"
@@ -9318,4 +9325,16 @@ explore: events {
     relationship: one_to_many
   }
 
+  join: events__target__labels_cert_chain_fps {
+    view_label: "Events: Target Labels Cert Chain FPS"
+    sql: LEFT JOIN UNNEST(${events.target__labels}) as events__target__labels_cert_chain_fps ON ${events__target__labels_cert_chain_fps.key} = 'cert_chain_fps';;
+    fields: [events__target__labels_cert_chain_fps.value]
+    relationship: one_to_many
+  }
+  #Secure Channel Insights
+  join: x509_events_only {
+    type: inner
+    sql_on: ${x509_events_only.fingerprint} = ${events__target__labels_cert_chain_fps.value};;
+    relationship: one_to_many
+  }
 }
