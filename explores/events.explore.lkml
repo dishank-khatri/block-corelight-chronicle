@@ -1,6 +1,6 @@
 include: "/views/events.view"
 explore: dns {}
-
+explore: avg_rtt {}
 explore: events {
   sql_always_where: ${metadata__vendor_name} = "Corelight" ;;
   #SSH_Inferences_derived
@@ -785,6 +785,20 @@ explore: events {
     view_label: "Events: About Labels Auth Success"
     sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__auth__success ON ${events__about__labels__auth__success.key} = 'auth_success' ;;
     fields: [events__about__labels__auth__success.value]
+    relationship: one_to_many
+  }
+  # Remote Activity Insights
+  join: events__about__labels__cookie {
+    view_label: "Events: About Labels Cookie"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__cookie ON ${events__about__labels__cookie.key} = 'cookie' ;;
+    fields: [events__about__labels__cookie.value]
+    relationship: one_to_many
+  }
+  # Remote Activity Insights
+  join: events__about__labels__result {
+    view_label: "Events: About Labels Result"
+    sql: LEFT JOIN UNNEST(${events__about.labels}) as events__about__labels__result ON ${events__about__labels__result.key} = 'result' ;;
+    fields: [events__about__labels__result.value]
     relationship: one_to_many
   }
   join: events__about__labels__uid {
