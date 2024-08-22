@@ -56,14 +56,14 @@
     col: 0
     width: 17
     height: 2
-  - title: Less Secure Ciphers seen in the period
-    name: Less Secure Ciphers seen in the period
+  - title: Less Secure Ciphers Seen in the Period
+    name: Less Secure Ciphers Seen in the Period
     model: corelight-chronicle
     explore: events
     type: looker_grid
     fields: [events.network__tls__cipher, events.last_target_ip, events__about__labels__uid__only.distinct_uid_only_count,
       events.values_host_type_less_secure_cipher, events.values_direction_less_secure_cipher,
-      events.less_secure_cipher_seen_in_the_period_link]
+      events.metadata_id_count, events.less_secure_cipher_seen_in_the_period_link]
     filters:
       events.metadata__product_event_type: ssl
       events.match_cipher: 'Yes'
@@ -114,6 +114,7 @@
       events.values_host_type_less_secure_cipher: Host Type
       events.values_direction_less_secure_cipher: Direction
       events.less_secure_cipher_seen_in_the_period_link: Raw Logs
+      events.metadata_id_count: Count
     series_cell_visualizations: {}
     hidden_pivots: {}
     defaults_version: 1
@@ -180,13 +181,13 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-      Traffic Direction(For TLS Versions): events.connection_type
+      Traffic Direction(Only for TLS Versions): events.connection_type
     row: 11
     col: 0
     width: 5
     height: 3
-  - title: Network Evidence for All TLS versions seen
-    name: Network Evidence for All TLS versions seen
+  - title: Network Evidence for All TLS Versions Seen
+    name: Network Evidence for All TLS Versions Seen
     model: corelight-chronicle
     explore: events
     type: looker_grid
@@ -237,7 +238,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-      Traffic Direction(For TLS Versions): events.connection_type
+      Traffic Direction(Only for TLS Versions): events.connection_type
     row: 14
     col: 0
     width: 12
@@ -280,7 +281,7 @@
     explore: events
     type: looker_grid
     fields: [events__about__labels__uid__only.value, events__principal__ip.events__principal__ip,
-      events__target__ip.events__target__ip, events.inference, events__security_result.description,
+      events__target__ip.events__target__ip, events.values_inference, events.values_description,
       events.metadata_id_count, events.interactive_sessions_and_keystrokes_link]
     filters:
       events.metadata__product_event_type: ssh
@@ -306,7 +307,8 @@
     show_sql_query_menu_options: false
     column_order: ["$$$_row_numbers_$$$", events__about__labels__uid__only.value,
       events__principal__ip.events__principal__ip, events__target__ip.events__target__ip,
-      events.inference, events__security_result.description, events.metadata_id_count]
+      events.values_inference, events.values_description, events.metadata_id_count,
+      events.interactive_sessions_and_keystrokes_link]
     show_totals: true
     show_row_totals: true
     truncate_header: false
@@ -315,11 +317,11 @@
       events__about__labels__uid__only.value: UID
       events__target__ip.events__target__ip: Dest IP
       events__principal__ip.events__principal__ip: Src IP
-      events__security_result.summary: Inference
       events.metadata_id_count: Count
-      events__security_result.description: Description
       events.network_evidence_for_interactive_sessions_and_keystrokes_link: Raw Logs
       events.interactive_sessions_and_keystrokes_link: Raw Logs
+      events.values_inference: Inferences
+      events.values_description: Description
     series_cell_visualizations:
       events__about__labels__uid__only.distinct_uid_only_count:
         is_active: false
@@ -511,7 +513,7 @@
     explore: events
     type: looker_grid
     fields: [events__about__labels__uid__only.value, events__principal__ip.events__principal__ip,
-      events__target__ip.events__target__ip, events.inference, events__security_result.description,
+      events__target__ip.events__target__ip, events.values_inference, events.values_description,
       events.metadata_id_count, events.possible_file_transfer_link]
     filters:
       events.metadata__product_event_type: ssh
@@ -541,13 +543,13 @@
     minimum_column_width:
     series_labels:
       events__target__ip.events__target__ip: Dest IP
-      events__security_result.summary: inference
-      events__security_result.description: Description
       events.metadata_id_count: Count
       events.inference: Inference
       events.possible_file_transfer_link: Raw Logs
       events__about__labels__uid__only.value: UID
       events__principal__ip.events__principal__ip: Src IP
+      events.values_inference: Inferences
+      events.values_description: Description
     series_cell_visualizations:
       events.metadata_id_count:
         is_active: false
@@ -823,14 +825,14 @@
     col: 12
     width: 5
     height: 3
-  - title: SSH Advanced Threats Infereces
-    name: SSH Advanced Threats Infereces
+  - title: SSH Advanced Threats Inferences
+    name: SSH Advanced Threats Inferences
     model: corelight-chronicle
     explore: events
     type: looker_grid
     fields: [events__about__labels__uid__only.value, events__principal__ip.events__principal__ip,
-      events__target__ip.events__target__ip, events.inference, events.metadata_id_count,
-      events__security_result.description, events.ssh_advance_threat_inferences_link]
+      events__target__ip.events__target__ip, events.values_inference, events.metadata_id_count,
+      events.values_description, events.ssh_advance_threat_inferences_link]
     filters:
       events.metadata__product_event_type: ssh
       events.inference: ABP,RSP,RSI,RSIA,RSL,RSK
@@ -855,7 +857,8 @@
     show_sql_query_menu_options: false
     column_order: ["$$$_row_numbers_$$$", events__about__labels__uid__only.value,
       events__principal__ip.events__principal__ip, events__target__ip.events__target__ip,
-      events.inference, events.metadata_id_count, events__security_result.description]
+      events.values_inference, events.metadata_id_count, events.values_description,
+      events.ssh_advance_threat_inferences_link]
     show_totals: true
     show_row_totals: true
     truncate_header: false
@@ -864,10 +867,10 @@
       events__about__labels__uid__only.value: UID
       events__principal__ip.events__principal__ip: Src IP
       events__target__ip.events__target__ip: Dest IP
-      events.inference: Inference
-      events__security_result.description: Description
       events.metadata_id_count: Count
       events.ssh_advance_threat_inferences_link: Raw Logs
+      events.values_inference: Inferences
+      events.values_description: Description
     series_cell_visualizations:
       events.metadata_id_count:
         is_active: false
@@ -1002,7 +1005,7 @@
     model: corelight-chronicle
     explore: events
     type: looker_grid
-    fields: [events.network__tls__client__server_name, events__target__ip.events__target__ip,
+    fields: [events.network__tls__client__server_name_not_null, events__target__ip.events__target__ip,
       events.target__port, x509_events_only.certificate_key_length, is_ip_internal_external.dest_host_type,
       events.metadata_id_count, events.weak_key_length_certs_link]
     filters:
@@ -1034,14 +1037,14 @@
     truncate_header: false
     minimum_column_width:
     series_labels:
-      events.network__tls__client__server_name: Server Name
       events__target__ip.events__target__ip: Dest Host
-      events.target__port: Dest Port
+      events.target__port: Resp Port
       x509_events_only.certificate_key_length: Key Length
       is_ip_internal_external.dest_host_type: Host Type
       events.metadata_id_count: Count
       events.network_evidence_for_weak_key_length_certs_link: Raw Logs
       events.weak_key_length_certs_link: Raw Logs
+      events.network__tls__client__server_name_not_null: Server Name
     series_cell_visualizations:
       events.metadata_id_count:
         is_active: false
@@ -1185,8 +1188,8 @@
     col: 0
     width: 12
     height: 6
-  - title: Certificates about to Expire
-    name: Certificates about to Expire
+  - title: Certificates About to Expire
+    name: Certificates About to Expire
     model: corelight-chronicle
     explore: events
     type: single_value
@@ -1280,8 +1283,8 @@
     explore: events
     listens_to_filters: []
     field: events.observer__namespace
-  - name: Traffic Direction(For TLS Versions)
-    title: Traffic Direction(For TLS Versions)
+  - name: Traffic Direction(Only for TLS Versions)
+    title: Traffic Direction(Only for TLS Versions)
     type: field_filter
     default_value: ''
     allow_multiple_values: true

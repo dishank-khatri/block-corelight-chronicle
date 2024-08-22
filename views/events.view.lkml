@@ -1411,6 +1411,12 @@ view: events {
     group_label: "Network Tls Client"
     group_item_label: "Server Name"
   }
+  dimension: network__tls__client__server_name_not_null {
+    type: string
+    sql: COALESCE(${TABLE}.network.tls.client.server_name, "Unknown") ;;
+    group_label: "Network Tls Client"
+    group_item_label: "Server Name Not Null"
+  }
   dimension: network__tls__client__supported_ciphers {
     hidden: yes
     sql: ${TABLE}.network.tls.client.supported_ciphers ;;
@@ -31470,11 +31476,12 @@ view: events {
   dimension: connection_type {
     type: string
     sql: CASE
-            WHEN ${tls_version_src_internal} = 'true' AND ${tls_version_dest_internal} = 'false' THEN 'Outbound'
-            WHEN ${tls_version_src_internal} = 'false' AND ${tls_version_dest_internal} = 'true' THEN 'Inbound'
-            WHEN ${tls_version_src_internal} = 'true' AND ${tls_version_dest_internal} = 'true' THEN 'Internal'
-            WHEN ${tls_version_src_internal} = 'false' AND ${tls_version_dest_internal} = 'false' THEN 'EEther'
-         END;;
+            WHEN ${is_ip_internal_external.is_src_internal} = 'true' AND ${is_ip_internal_external.is_dest_internal} = 'false' THEN 'Outbound'
+            WHEN ${is_ip_internal_external.is_src_internal} = 'false' AND ${is_ip_internal_external.is_dest_internal} = 'true' THEN 'Inbound'
+            WHEN ${is_ip_internal_external.is_src_internal} = 'true' AND ${is_ip_internal_external.is_dest_internal} = 'true' THEN 'Internal'
+            WHEN ${is_ip_internal_external.is_src_internal} = 'false' AND ${is_ip_internal_external.is_dest_internal} = 'false' THEN 'EEther'
+            ELSE 'Unknown'
+        END;;
   }
 
   #Secure Channel Insights - Network Evidence for All TLS versions seen
@@ -31569,7 +31576,7 @@ view: events {
   #Secure Channel Insights - Connections using Less Secure TLS Versions
   measure: connections_using_less_secure_tls_versions {
     type: count_distinct
-    sql:CONCAT(${events__principal__ip.events__principal__ip}, ${events__target__ip.events__target__ip}, ${events__about__labels__uid__only.value});;
+    sql:CONCAT(${network__tls__version}, ${version_status}, ${connection_type}, ${events__about__labels__uid__only.value});;
   }
 
   #Secure Channel Insights - Connections using Less Secure TLS Versions
@@ -31687,7 +31694,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.version=\"{{ network__tls__version | url_encode }}\" AND target.ip != \"\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND network.tls.version=\"{{ network__tls__version | url_encode }}\" AND target.ip != \"\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
@@ -31697,7 +31704,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.summary=\"{{ events__security_result.summary | url_encode }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND (security_result.summary=\"Automated Interaction\" OR security_result.summary=\"Keystrokes\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
@@ -31717,7 +31724,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.summary=\"{{ events__security_result.summary }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND (security_result.summary=\"Small Client File Download\" OR security_result.summary=\"Large Client File Donwload\" OR security_result.summary=\"Small Client File Upload\" OR security_result.summary=\"Large Client File Upload\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
@@ -31757,7 +31764,7 @@ view: events {
     type: count
     link: {
       label: "View in Chronicle"
-      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND security_result.summary=\"{{ events__security_result.summary }}\"{% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
+      url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" AND about.labels[\"uid\"]=\"{{ events__about__labels__uid__only.value }}\" AND principal.ip=\"{{ events__principal__ip.events__principal__ip }}\" AND target.ip=\"{{ events__target__ip.events__target__ip }}\" AND (security_result.summary=\"Client Authentication Bypass\" OR security_result.summary=\"Reverse SSH Providioned\" OR security_result.summary=\"Reverse SSH Initiated\" OR security_result.summary=\"Reverse SSH Initiated Automate\" OR security_result.summary=\"Reverse SSH Logged In\" OR security_result.summary=\"Reverse SSH Keystrokes\"){% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %} {% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
