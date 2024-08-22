@@ -3,19 +3,18 @@
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
-  preferred_slug: yMhhzKcwSTx1AXG4SO8zyr
+  preferred_slug: JZtH5KJx9lHTtVOF2v9m1W
   elements:
   - name: ''
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal;">Remote
       Access Hygiene</h4>
 
       '
     row: 0
     col: 0
-    width: 24
+    width: 17
     height: 2
   - title: RDP Authentication Attempts
     name: RDP Authentication Attempts
@@ -60,7 +59,8 @@
     defaults_version: 1
     note_state: collapsed
     note_display: hover
-    note_text: RDP Authentication Attempts
+    note_text: Total count of RDP success and failed actions within the specified
+      time
     listen:
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
@@ -72,7 +72,6 @@
   - name: " (2)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Monitoring RDP authentications is
       crucial for identifying unauthorized access and distinguishing between successful
       and failed login attempts. Security teams should analyze trends and cross-reference
@@ -152,6 +151,10 @@
       Success - events.rdp_authentication_attempts_insights_count: "#7CB342"
     defaults_version: 1
     hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: Total count of RDP success and failed actions within the specified
+      time
     listen:
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
@@ -203,7 +206,7 @@
     show_totals: true
     show_row_totals: true
     truncate_header: false
-    minimum_column_width:
+    minimum_column_width: 75
     series_labels:
       events__about__labels__cookie.value: User
       events__principal__ip.events__principal__ip: Source
@@ -217,6 +220,9 @@
       count_of_metadata_id:
         is_active: false
     defaults_version: 1
+    note_state: collapsed
+    note_display: hover
+    note_text: Total count of users with login failures within the specified time
     title_hidden: true
     listen:
       Sensor: events.observer__hostname
@@ -293,9 +299,7 @@
     hidden_pivots: {}
     note_state: collapsed
     note_display: hover
-    note_text: 'Identifying Failed RDP Logins
-
-      '
+    note_text: Total count of users with login failures within the specified time
     listen:
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
@@ -307,7 +311,6 @@
   - name: " (4)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Monitoring failed RDP logins is
       essential for detecting unauthorized access attempts. Security teams should
       analyze patterns of failed entries against user and IP data to identify potential
@@ -319,7 +322,7 @@
     width: 8
     height: 3
   - type: button
-    name: button_1642
+    name: button_1948
     rich_content_json: '{"text":"For Further Investigations -- VPN Inferences   →","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__vpn_insights"}'
     row: 11
     col: 17
@@ -328,7 +331,6 @@
   - name: " (5)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal;">VPN
       Insights</h4>
 
@@ -369,7 +371,9 @@
     hidden_pivots: {}
     note_state: collapsed
     note_display: hover
-    note_text: Unusual Remote Activity
+    note_text: Total count of VPN connections that have the following inferences NSP
+      - Non-Standard Port RW - Road warrior configuration detected (i.e. Cisco Anyconnect)
+      COM - Commercial VPN service occurring at the same time which is deemed suspicious
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -378,7 +382,7 @@
     col: 0
     width: 4
     height: 3
-  - title:
+  - title: ''
     name: " (6)"
     model: corelight-chronicle
     explore: events
@@ -440,7 +444,9 @@
     hidden_pivots: {}
     note_state: collapsed
     note_display: hover
-    note_text: Unusual Remote Activity
+    note_text: Total count of VPN connections that have the following inferences NSP
+      - Non-Standard Port RW - Road warrior configuration detected (i.e. Cisco Anyconnect)
+      COM - Commercial VPN service occurring at the same time which is deemed suspicious
     title_hidden: true
     listen:
       Global Time Restriction: events.event_timestamp_time
@@ -453,7 +459,6 @@
   - name: " (7)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"The combination of the \"COM\",
       \"RW\", and \"NSP\" inferences in a single VPN connection raises questions:
       Policy Violation: Is the use of commercial VPNs allowed in your organization''s
@@ -496,7 +501,8 @@
     defaults_version: 1
     note_state: collapsed
     note_display: hover
-    note_text: Suspected Data Exfiltration
+    note_text: Total count of VPN connections using potentially unusual connection
+      configurations such as static TLS key auth
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -505,7 +511,7 @@
     col: 12
     width: 4
     height: 3
-  - title:
+  - title: ''
     name: " (8)"
     model: corelight-chronicle
     explore: events
@@ -515,7 +521,7 @@
       count_of_metadata_id, events.values_inference_vpn, events.suspected_data_exfiltration_external_link]
     filters:
       events.metadata__product_event_type: vpn
-      events__about__labels__inferences_vpn.value: COM,NSP,RW
+      events__about__labels__inferences_vpn.value: COM,NSP,SK
       events__principal__ip.events__principal__ip: "-NULL"
       events__target__ip.events__target__ip: "-NULL"
     sorts: [events__principal__ip.events__principal__ip]
@@ -565,6 +571,11 @@
       count_of_metadata_id:
         is_active: false
     defaults_version: 1
+    hidden_pivots: {}
+    note_state: collapsed
+    note_display: hover
+    note_text: Total count of VPN connections using potentially unusual connection
+      configurations such as static TLS key auth
     title_hidden: true
     listen:
       Global Time Restriction: events.event_timestamp_time
@@ -577,7 +588,6 @@
   - name: " (9)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Unmonitored commercial VPNs with
       atypical traffic patterns or static keys could be used to bypass security controls
       for data theft. \n\nInvestigate: Examine VPN sessions with large outgoing transfers,
@@ -587,7 +597,7 @@
     col: 16
     width: 8
     height: 3
-  - title:
+  - title: ''
     name: " (10)"
     model: corelight-chronicle
     explore: events
@@ -661,7 +671,9 @@
     hidden_pivots: {}
     note_state: collapsed
     note_display: hover
-    note_text: Possible Unauthorized Remote Access Attempts
+    note_text: Total count of VPN connections that are using the RW- Road warrior
+      configuration detected (i.e. Cisco Anyconnect) and FW - Firewall subversion
+      inferences
     title_hidden: true
     listen:
       Global Time Restriction: events.event_timestamp_time
@@ -674,7 +686,6 @@
   - name: " (11)"
     type: text
     title_text: ''
-    subtitle_text: ''
     body_text: '[{"type":"p","children":[{"text":"Monitoring for \"RW\" (Road Warrior)
       and \"FW\" (Firewall subversion) inferences is crucial for detecting potential
       unauthorized access, as these patterns may indicate attempts to bypass security
@@ -717,7 +728,9 @@
     defaults_version: 1
     note_state: collapsed
     note_display: hover
-    note_text: Possible Unauthorized Remote Access Attempts
+    note_text: Total count of VPN connections that are using the RW- Road warrior
+      configuration detected (i.e. Cisco Anyconnect) and FW - Firewall subversion
+      inferences
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -726,6 +739,13 @@
     col: 0
     width: 4
     height: 3
+  - type: button
+    name: button_2035
+    rich_content_json: '{"text":"For Further Investigations -- RDP Inferences","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__rdp_inferences_overview"}'
+    row: 0
+    col: 17
+    width: 7
+    height: 2
   filters:
   - name: Global Time Restriction
     title: Global Time Restriction
