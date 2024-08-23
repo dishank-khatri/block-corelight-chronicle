@@ -3,10 +3,10 @@
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
-  preferred_slug: 525ZE28RT6xDtZmaYpsss9
+  preferred_slug: KQWHctfTy7xNxeYeVGtw7J
   elements:
-  - title: Unusual Query Types found
-    name: Unusual Query Types found
+  - title: Unusual Query Types Found
+    name: Unusual Query Types Found
     model: corelight-chronicle
     explore: events
     type: looker_grid
@@ -17,7 +17,7 @@
       events.metadata__product_event_type: dns
       events__about__labels__qtype_name.value: AXFR,IXFR,ANY,TXT
     sorts: [events__principal__ip.events__principal__ip desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     dynamic_fields:
     - _kind_hint: measure
@@ -229,8 +229,8 @@
     col: 0
     width: 4
     height: 3
-  - title: DNS Servers actively responding to queries
-    name: DNS Servers actively responding to queries
+  - title: DNS Servers Actively Responding to Queries
+    name: DNS Servers Actively Responding to Queries
     model: corelight-chronicle
     explore: events
     type: looker_grid
@@ -240,7 +240,7 @@
     filters:
       events.metadata__product_event_type: dns
     sorts: [count_of_events_principal_ip desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     dynamic_fields:
     - _kind_hint: measure
@@ -340,7 +340,7 @@
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: "-NXDOMAIN,-NOERROR"
     sorts: [events.formatted_metadata_id_count desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     show_view_names: false
     show_row_numbers: true
@@ -476,7 +476,7 @@
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: SERVFAIL,REFUSED,FORMERR,NOTIMP,NOTAUTH
     sorts: [events__principal__ip.events__principal__ip]
-    limit: 500
+    limit: 5000
     column_limit: 50
     dynamic_fields:
     - _kind_hint: measure
@@ -621,7 +621,7 @@
     filters:
       events.metadata__product_event_type: dns
     sorts: [events.event_timestamp_time desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     dynamic_fields:
     - _kind_hint: measure
@@ -684,7 +684,7 @@
     type: single_value
     fields: [avg_rtt.count]
     filters:
-      avg_rtt.avg_rtt: ">16"
+      avg_rtt.avg_rtt: ">0.015"
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -716,9 +716,9 @@
     type: looker_grid
     fields: [avg_rtt.Query, avg_rtt.Responder, avg_rtt.avg_rtt]
     filters:
-      avg_rtt.avg_rtt: ">16"
+      avg_rtt.avg_rtt: ">0.015"
     sorts: [avg_rtt.Query]
-    limit: 500
+    limit: 5000
     column_limit: 50
     show_view_names: false
     show_row_numbers: true
@@ -742,7 +742,17 @@
     minimum_column_width: 75
     series_labels:
       avg_rtt.avg_rtt: Avg. Response Time (ms)
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    single_value_title: ''
     defaults_version: 1
+    note_state: collapsed
+    note_display: hover
+    note_text: Monitoring Query Types by AVG time
     listen:
       Global Time Restriction: avg_rtt.time_derived
       Sensor: avg_rtt.sensor_name_derived
