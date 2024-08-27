@@ -653,7 +653,7 @@
     label_density: 25
     x_axis_scale: auto
     y_axis_combined: true
-    show_null_points: true
+    show_null_points: false
     interpolation: linear
     y_axes: [{label: Count, orientation: left, series: [{axisId: events.monitoring_query_type_by_average_time_count,
             id: events.monitoring_query_type_by_average_time_count, name: Monitoring
@@ -662,6 +662,8 @@
     x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
+    series_labels:
+      events.monitoring_query_type_by_average_time_count: Count
     ordering: none
     show_null_labels: false
     show_totals_labels: false

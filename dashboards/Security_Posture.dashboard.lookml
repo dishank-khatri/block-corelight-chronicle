@@ -965,8 +965,8 @@
     col: 0
     width: 18
     height: 10
-  - title: Top VPN destinations by Country
-    name: Top VPN destinations by Country
+  - title: Top VPN Destinations by Country
+    name: Top VPN Destinations by Country
     model: corelight-chronicle
     explore: events
     type: looker_bar
@@ -1118,28 +1118,28 @@
     height: 10
   - type: button
     name: button_1508
-    rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__secure_channel_insights"}'
+    rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__secure_channel_insights"}'
     row: 0
     col: 18
     width: 6
     height: 2
   - type: button
     name: button_1509
-    rich_content_json: '{"text":"Name Resolution Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__name_resolution_insights"}'
+    rich_content_json: '{"text":"Name Resolution Insights. ➔","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__name_resolution_insights"}'
     row: 29
     col: 18
     width: 6
     height: 2
   - type: button
     name: button_1510
-    rich_content_json: '{"text":"Remote Activity Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__remote_activity_insights"}'
+    rich_content_json: '{"text":"Remote Activity Insights. ➔","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__remote_activity_insights"}'
     row: 46
     col: 18
     width: 6
     height: 2
   - type: button
     name: button_1511
-    rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__secure_channel_insights"}'
+    rich_content_json: '{"text":"Secure Channel Insights. ➔","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::data_insights__secure_channel_insights"}'
     row: 18
     col: 18
     width: 6

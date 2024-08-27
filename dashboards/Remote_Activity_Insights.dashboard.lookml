@@ -323,7 +323,7 @@
     height: 3
   - type: button
     name: button_1948
-    rich_content_json: '{"text":"For Further Investigations -- VPN Inferences   →","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__vpn_insights"}'
+    rich_content_json: '{"text":"For Further Investigations -- VPN Inferences   →","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__vpn_insights"}'
     row: 11
     col: 17
     width: 7
@@ -603,11 +603,11 @@
     explore: events
     type: looker_grid
     fields: [events__principal__ip.events__principal__ip, events__target__ip.events__target__ip,
-      events.protocol_string, events__about__labels__inferences_vpn.value, events.target__port,
-      events.network__sent_bytes, count_of_value_2, events.possible_unauthorized_remote_external_link]
+      events.protocol_string, events.target__port, events.network__sent_bytes, events.values_inference_vpn,
+      count_of_value_2, events.possible_unauthorized_remote_external_link]
     filters:
       events.metadata__product_event_type: vpn
-      events__about__labels__inferences_vpn.value: "-NULL"
+      events__about__labels__inferences_vpn.value: RW,FW
     sorts: [count_of_value_2 desc]
     limit: 5000
     column_limit: 50
@@ -626,8 +626,6 @@
       label: Count of Value
       measure: count_of_value_2
       type: count_distinct
-    filter_expression: ${events__about__labels__inferences_vpn.value} = "RW" OR ${events__about__labels__inferences_vpn.value}
-      = "FW"
     show_view_names: false
     show_row_numbers: true
     transpose: false
@@ -653,11 +651,11 @@
       events__principal__ip.events__principal__ip: Source
       events__target__ip.events__target__ip: Destination
       events.protocol_string: Proto
-      events__about__labels__inferences_vpn.value: Inferences
       events.target__port: Destination Port
       events.network__sent_bytes: Bytes
       count_of_value_2: Count
       events.possible_unauthorized_remote_external_link: Raw Logs
+      events.values_inference_vpn: Inferences
     series_cell_visualizations:
       count_of_value:
         is_active: false
@@ -674,6 +672,9 @@
     note_text: Total count of VPN connections that are using the RW- Road warrior
       configuration detected (i.e. Cisco Anyconnect) and FW - Firewall subversion
       inferences
+    column_order: ["$$$_row_numbers_$$$", events__principal__ip.events__principal__ip,
+      events__target__ip.events__target__ip, events.protocol_string, events.values_inference_vpn,
+      events.target__port, events.network__sent_bytes, count_of_value_2, events.possible_unauthorized_remote_external_link]
     title_hidden: true
     listen:
       Global Time Restriction: events.event_timestamp_time
@@ -741,7 +742,7 @@
     height: 3
   - type: button
     name: button_2035
-    rich_content_json: '{"text":"For Further Investigations -- RDP Inferences","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__rdp_inferences_overview"}'
+    rich_content_json: '{"text":"For Further Investigations -- RDP Inferences  →","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::security_workflows__rdp_inferences_overview"}'
     row: 0
     col: 17
     width: 7
