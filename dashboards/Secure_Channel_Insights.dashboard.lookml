@@ -139,8 +139,8 @@
     col: 17
     width: 7
     height: 3
-  - title: Connections using Less Secure TLS Versions (< TLS12)
-    name: Connections using Less Secure TLS Versions (< TLS12)
+  - title: Connections Using Less Secure TLS Versions (< TLS12)
+    name: Connections Using Less Secure TLS Versions (< TLS12)
     model: corelight-chronicle
     explore: events
     type: single_value
@@ -1236,7 +1236,7 @@
     height: 3
   - type: button
     name: button_1903
-    rich_content_json: '{"text":"For Further Investigations -- SSH Inferences","description":"","newTab":true,"alignment":"center","size":"medium","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::ssh_inferences_overview?Event+Type=ssh&Time+Range=24+hour&SSH+Inferences="}'
+    rich_content_json: '{"text":"For Further Investigations -- SSH Inferences","description":"","newTab":true,"alignment":"center","size":"small","style":"FILLED","color":"#1A73E8","href":"/dashboards/corelight-chronicle::ssh_inferences_overview?Event+Type=ssh&Time+Range=24+hour&SSH+Inferences="}'
     row: 0
     col: 17
     width: 7

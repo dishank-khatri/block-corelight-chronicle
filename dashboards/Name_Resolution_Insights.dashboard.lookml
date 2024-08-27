@@ -612,8 +612,8 @@
     col: 16
     width: 8
     height: 3
-  - title: Monitoring Query Types by AVG time
-    name: Monitoring Query Types by AVG time
+  - title: Monitoring Query Types by AVG Time
+    name: Monitoring Query Types by AVG Time
     model: corelight-chronicle
     explore: events
     type: looker_line
@@ -653,7 +653,7 @@
     label_density: 25
     x_axis_scale: auto
     y_axis_combined: true
-    show_null_points: true
+    show_null_points: false
     interpolation: linear
     y_axes: [{label: Count, orientation: left, series: [{axisId: events.monitoring_query_type_by_average_time_count,
             id: events.monitoring_query_type_by_average_time_count, name: Monitoring
@@ -662,6 +662,8 @@
     x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
+    series_labels:
+      events.monitoring_query_type_by_average_time_count: Count
     ordering: none
     show_null_labels: false
     show_totals_labels: false
@@ -709,8 +711,8 @@
     col: 12
     width: 4
     height: 3
-  - title: Monitoring Query Types by AVG time
-    name: Monitoring Query Types by AVG time (2)
+  - title: Monitoring Query Types by AVG Time
+    name: Monitoring Query Types by AVG Time (2)
     model: corelight-chronicle
     explore: avg_rtt
     type: looker_grid
@@ -752,7 +754,7 @@
     defaults_version: 1
     note_state: collapsed
     note_display: hover
-    note_text: Monitoring Query Types by AVG time
+    note_text: Monitoring Query Types by AVG Time
     listen:
       Global Time Restriction: avg_rtt.time_derived
       Sensor: avg_rtt.sensor_name_derived
