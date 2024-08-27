@@ -612,8 +612,8 @@
     col: 16
     width: 8
     height: 3
-  - title: Monitoring Query Types by AVG time
-    name: Monitoring Query Types by AVG time
+  - title: Monitoring Query Types by AVG Time
+    name: Monitoring Query Types by AVG Time
     model: corelight-chronicle
     explore: events
     type: looker_line
