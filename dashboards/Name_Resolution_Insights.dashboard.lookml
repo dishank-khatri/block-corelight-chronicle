@@ -711,8 +711,8 @@
     col: 12
     width: 4
     height: 3
-  - title: Monitoring Query Types by AVG time
-    name: Monitoring Query Types by AVG time (2)
+  - title: Monitoring Query Types by AVG Time
+    name: Monitoring Query Types by AVG Time (2)
     model: corelight-chronicle
     explore: avg_rtt
     type: looker_grid
@@ -754,7 +754,7 @@
     defaults_version: 1
     note_state: collapsed
     note_display: hover
-    note_text: Monitoring Query Types by AVG time
+    note_text: Monitoring Query Types by AVG Time
     listen:
       Global Time Restriction: avg_rtt.time_derived
       Sensor: avg_rtt.sensor_name_derived
