@@ -176,7 +176,7 @@
     defaults_version: 1
     note_state: collapsed
     note_display: above
-    note_text: Connections using Less Secure TLS Versions (< TLS1.2)
+    note_text: Connections Using Less Secure TLS Versions (< TLS1.2)
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -1225,7 +1225,7 @@
     hidden_pivots: {}
     note_state: collapsed
     note_display: above
-    note_text: Certificates about to Expire
+    note_text: Certificates About to Expire
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname

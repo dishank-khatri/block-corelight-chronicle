@@ -3,7 +3,7 @@
   layout: newspaper
   preferred_viewer: dashboards-next
   description: ''
-  preferred_slug: KQWHctfTy7xNxeYeVGtw7J
+  preferred_slug: rjoErNL3n1mHN70b00uoef
   elements:
   - title: Unusual Query Types Found
     name: Unusual Query Types Found
@@ -204,7 +204,7 @@
     fields: [events.nxdomain_responses_count]
     filters:
       events.metadata__product_event_type: dns
-      events__about__labels__rcode_name.value: "-NXDOMAIN,-NOERROR"
+      events__about__labels__rcode_name.value: NXDOMAIN
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -338,7 +338,7 @@
       events.nxdomain_responses_external_link]
     filters:
       events.metadata__product_event_type: dns
-      events__about__labels__rcode_name.value: "-NXDOMAIN,-NOERROR"
+      events__about__labels__rcode_name.value: NXDOMAIN
     sorts: [events.formatted_metadata_id_count desc]
     limit: 5000
     column_limit: 50
@@ -469,13 +469,12 @@
     model: corelight-chronicle
     explore: events
     type: looker_grid
-    fields: [events__about__labels__rcode_name.value, events__principal__ip.events__principal__ip,
-      events__target__ip.events__target__ip, events__network__dns__questions.name,
-      count_of_metadata_id_2, events.failed_dns_queries_external_link]
+    fields: [events__about__labels__rcode_name.value, events.last_principal_ip, events.last_target_ip,
+      events.last_query, count_of_metadata_id_2, events.failed_dns_queries_external_link]
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: SERVFAIL,REFUSED,FORMERR,NOTIMP,NOTAUTH
-    sorts: [events__principal__ip.events__principal__ip]
+    sorts: [events__about__labels__rcode_name.value]
     limit: 5000
     column_limit: 50
     dynamic_fields:
@@ -514,12 +513,12 @@
     truncate_header: false
     minimum_column_width: 75
     series_labels:
-      events__principal__ip.events__principal__ip: Source
-      events__target__ip.events__target__ip: Responder
-      events__network__dns__questions.name: Query
       events__about__labels__rcode_name.value: Response
       events.failed_dns_queries_external_link: Raw Logs
       count_of_metadata_id_2: Count
+      events.last_principal_ip: Source
+      events.last_target_ip: Responder
+      events.last_query: Query
     series_cell_visualizations:
       count_of_metadata_id_2:
         is_active: false
@@ -617,10 +616,11 @@
     model: corelight-chronicle
     explore: events
     type: looker_line
-    fields: [events.event_timestamp_time, events.monitoring_query_type_by_average_time_count]
+    fields: [events.monitoring_query_type_by_average_time_count, events.event_timestamp_date]
+    fill_fields: [events.event_timestamp_date]
     filters:
       events.metadata__product_event_type: dns
-    sorts: [events.event_timestamp_time desc]
+    sorts: [events.event_timestamp_date desc]
     limit: 5000
     column_limit: 50
     dynamic_fields:
