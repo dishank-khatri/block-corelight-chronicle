@@ -155,7 +155,7 @@
     filters:
       events.metadata__product_event_type: ssl
     sorts: [encrypted_traffic_volume desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     dynamic_fields:
     - category: measure
@@ -499,7 +499,7 @@
       events.metadata__product_event_type: conn
       events__about__labels__service.value: -ssl,-dns,-tls,-"ssl,http",-"http,ssl"
     sorts: [events__about__labels__service.value, events.event_timestamp_hour desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     dynamic_fields:
     - category: table_calculation
@@ -593,7 +593,7 @@
     name: Failed DNS Queries
     model: corelight-chronicle
     explore: events
-    type: corelight-looker::single_value_custom_viz
+    type: corelight-dashboards::single_value_custom_viz
     fields: [events.failed_dns_queries, events.event_timestamp_date]
     fill_fields: [events.event_timestamp_date]
     filters:
@@ -690,7 +690,7 @@
     name: Unusual Qtypes
     model: corelight-chronicle
     explore: events
-    type: corelight-looker::single_value_custom_viz
+    type: corelight-dashboards::single_value_custom_viz
     fields: [events.event_timestamp_hour, events.unusual_qtypes_count]
     fill_fields: [events.event_timestamp_hour]
     filters:
@@ -728,7 +728,7 @@
     filters:
       events.metadata__product_event_type: vpn
     sorts: [events.event_timestamp_hour desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     filter_expression: "${events__about__labels__uid__only.value} = ${conn_events_search_derived_outbound.conn_uids}"
     x_axis_gridlines: false
@@ -819,7 +819,7 @@
       events.metadata__product_event_type: rdp
       events__about__labels__auth__success.value: "-NULL"
     sorts: [events.auth_result, events.event_timestamp_hour desc]
-    limit: 500
+    limit: 5000
     column_limit: 50
     x_axis_gridlines: false
     y_axis_gridlines: true
@@ -882,7 +882,7 @@
     name: NXDOMAIN Responses
     model: corelight-chronicle
     explore: events
-    type: corelight-looker::single_value_custom_viz
+    type: corelight-dashboards::single_value_custom_viz
     fields: [events.event_timestamp_hour, events.nxdomain_responses]
     fill_fields: [events.event_timestamp_hour]
     filters:
@@ -1052,7 +1052,7 @@
     filters:
       events.metadata__product_event_type: dns
     sorts: [events.metadata_id_count desc 0]
-    limit: 500
+    limit: 5000
     column_limit: 50
     show_view_names: false
     show_row_numbers: true
