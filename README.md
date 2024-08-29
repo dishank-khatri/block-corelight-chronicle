@@ -98,7 +98,7 @@ For more information on the Block structure and customization, refer to [Looker 
 
     ![image](https://github.com/user-attachments/assets/d9c22666-917a-4c8c-a385-0a213e4377ce)
 
-13. After saving the changes, click on Validate LookML on the top right corner and then click on Commit changes and Push the latest changes to the repository and then click **“Deploy to Production”**.
+13. After saving the changes, click on **"Validate LookML"** on the top right corner and then click on **"Commit changes"** and Push the latest changes to the repository.
 
     ![image](https://github.com/user-attachments/assets/352e98f8-6af3-48f6-adba-8af5707289cd)
 
