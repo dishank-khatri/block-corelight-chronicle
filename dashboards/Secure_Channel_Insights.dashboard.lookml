@@ -181,7 +181,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-      Traffic Direction(Only for TLS Versions): events.connection_type
+      Traffic Direction (Only for TLS Versions): events.connection_type
     row: 11
     col: 0
     width: 5
@@ -238,7 +238,7 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-      Traffic Direction(Only for TLS Versions): events.connection_type
+      Traffic Direction (Only for TLS Versions): events.connection_type
     row: 14
     col: 0
     width: 12
@@ -1283,8 +1283,8 @@
     explore: events
     listens_to_filters: []
     field: events.observer__namespace
-  - name: Traffic Direction(Only for TLS Versions)
-    title: Traffic Direction(Only for TLS Versions)
+  - name: Traffic Direction (Only for TLS Versions)
+    title: Traffic Direction (Only for TLS Versions)
     type: field_filter
     default_value: ''
     allow_multiple_values: true

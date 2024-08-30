@@ -691,12 +691,12 @@
     model: corelight-chronicle
     explore: events
     type: corelight-dashboards::single_value_custom_viz
-    fields: [events.event_timestamp_hour, events.unusual_qtypes_count]
-    fill_fields: [events.event_timestamp_hour]
+    fields: [events.event_timestamp_date, events.unusual_qtypes_count]
+    fill_fields: [events.event_timestamp_date]
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__qtype_name.value: AXFR,IXFR,ANY,TXT
-    sorts: [events.event_timestamp_hour desc]
+    sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -883,12 +883,12 @@
     model: corelight-chronicle
     explore: events
     type: corelight-dashboards::single_value_custom_viz
-    fields: [events.event_timestamp_hour, events.nxdomain_responses]
-    fill_fields: [events.event_timestamp_hour]
+    fields: [events.event_timestamp_date, events.nxdomain_responses]
+    fill_fields: [events.event_timestamp_date]
     filters:
       events.metadata__product_event_type: dns
-      events__about__labels__rcode_name.value: "-NXDOMAIN,-NOERROR"
-    sorts: [events.event_timestamp_hour desc]
+      events__about__labels__rcode_name.value: NXDOMAIN,NOERROR
+    sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
     custom_color_enabled: true

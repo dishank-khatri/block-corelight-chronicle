@@ -204,7 +204,7 @@
     fields: [events.nxdomain_responses_count]
     filters:
       events.metadata__product_event_type: dns
-      events__about__labels__rcode_name.value: NXDOMAIN
+      events__about__labels__rcode_name.value: NXDOMAIN,NOERROR
     limit: 500
     column_limit: 50
     custom_color_enabled: true

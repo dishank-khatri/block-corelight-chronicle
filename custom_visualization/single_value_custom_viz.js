@@ -90,10 +90,24 @@
       // Define color for count and line chart
       const color_for_count_and_line = '#262D33';
 
+      // Format the Count of Events
+      var formatted_count_of_event;
+      if (count_of_event > 999) {
+          if (Math.round(count_of_event/1000)*1000 === count_of_event) {
+              formatted_count_of_event = Math.round(count_of_event/1000).toString() + 'K';
+          } else if (count_of_event % 1000 <= 100) {
+              formatted_count_of_event = Math.floor(count_of_event/1000).toString() + 'K';
+          } else {
+              formatted_count_of_event = (Math.round(count_of_event/1000, 1)).toString() + 'K';
+          }
+      } else {
+          formatted_count_of_event = count_of_event.toString();
+      }
+
       // Display the count and percentage value in the container
       this.container.innerHTML = `
         <div style="display: flex; align-items: center;">
-          <div id="count-event" style="font-size: 60px; font-family: Arial, Helvetica, sans-serif; color: ${color_for_count_and_line}; cursor: pointer;">${count_of_event}</div>
+          <div id="count-event" style="font-size: 60px; font-family: Arial, Helvetica, sans-serif; color: ${color_for_count_and_line}; cursor: pointer;">${formatted_count_of_event}</div>
           <div style="display: flex; flex-direction: column; align-items: flex-start;">
             <div style="font-size: 30px; font-family: Arial, Helvetica, sans-serif; color: ${color};">${arrowIcon}</div>
             <div style="font-size: 20px; font-family: Arial, Helvetica, sans-serif; text-align: right; color: ${color};">${percentage}</div>
