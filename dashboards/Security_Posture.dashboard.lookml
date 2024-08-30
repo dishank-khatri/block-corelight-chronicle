@@ -599,6 +599,7 @@
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: SERVFAIL,REFUSED,FORMERR,NOTIMP,NOTAUTH
+      events.event_timestamp_date: 15 days
     sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
@@ -626,7 +627,6 @@
     defaults_version: 0
     hidden_pivots: {}
     listen:
-      Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
     row: 31
@@ -696,6 +696,7 @@
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__qtype_name.value: AXFR,IXFR,ANY,TXT
+      events.event_timestamp_date: 15 days
     sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
@@ -711,7 +712,6 @@
     show_view_names: false
     defaults_version: 0
     listen:
-      Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
     row: 31
@@ -888,6 +888,7 @@
     filters:
       events.metadata__product_event_type: dns
       events__about__labels__rcode_name.value: NXDOMAIN,NOERROR
+      events.event_timestamp_date: 15 days
     sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
@@ -903,7 +904,6 @@
     defaults_version: 0
     hidden_pivots: {}
     listen:
-      Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
     row: 31

@@ -101,10 +101,10 @@
       // Display the count and percentage value in the container
       this.container.innerHTML = `
         <div style="display: flex; align-items: center;">
-          <div id="count-event" style="font-size: 60px; font-family: Arial, Helvetica, sans-serif; color: ${color_for_count_and_line}; cursor: pointer;">${formatted_count_of_event}</div>
-          <div style="display: flex; flex-direction: column; align-items: flex-start;">
-            <div style="font-size: 30px; font-family: Arial, Helvetica, sans-serif; color: ${color};">${arrowIcon}</div>
-            <div style="font-size: 20px; font-family: Arial, Helvetica, sans-serif; text-align: right; color: ${color};">${percentage}</div>
+          <div id="count-event" style="font-size: 36px; font-family: Arial, Helvetica, sans-serif; color: ${color_for_count_and_line}; cursor: pointer;">${formatted_count_of_event}</div>
+          <div style="display: flex; flex-direction: column; align-items: flex-start; margin: 0px 0px 8px 5px">
+            <div style="font-size: 18px; font-family: Arial, Helvetica, sans-serif; color: ${color};">${arrowIcon}</div>
+            <div style="font-size: 12px; font-family: Arial, Helvetica, sans-serif; text-align: right; color: ${color};">${percentage}</div>
           </div>
         </div>
       `;
@@ -151,7 +151,7 @@
             fill: false,
             borderColor: color_for_count_and_line,
             borderWidth: 2,
-            pointRadius: 0,
+            pointRadius: 2,
             tension: 0.1
           }],
         },
