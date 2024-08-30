@@ -93,15 +93,9 @@
       // Format the Count of Events
       var formatted_count_of_event;
       if (count_of_event > 999) {
-          if (Math.round(count_of_event/1000)*1000 === count_of_event) {
-              formatted_count_of_event = Math.round(count_of_event/1000).toString() + 'K';
-          } else if (count_of_event % 1000 <= 100) {
-              formatted_count_of_event = Math.floor(count_of_event/1000).toString() + 'K';
-          } else {
-              formatted_count_of_event = (Math.round(count_of_event/1000, 1)).toString() + 'K';
-          }
+            formatted_count_of_event = (Math.round(count_of_event / 100) / 10).toString() + 'K';
       } else {
-          formatted_count_of_event = count_of_event.toString();
+            formatted_count_of_event = count_of_event.toString();
       }
 
       // Display the count and percentage value in the container
