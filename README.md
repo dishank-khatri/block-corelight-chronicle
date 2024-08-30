@@ -24,7 +24,7 @@ For more information on the Block structure and customization, refer to [Looker 
 
     ![image](https://github.com/user-attachments/assets/8ca29d72-74d0-4204-b2eb-ccf922af335f)
 
-2. Now select the main menu. Then click Admin and go to the connection page.
+2. Now select the main menu. Then click on Admin and go to the connection page.
 
     ![image](https://github.com/user-attachments/assets/1981fdde-2a2d-4229-9cd4-3b66f2c19ddd)
 
@@ -77,17 +77,17 @@ For more information on the Block structure and customization, refer to [Looker 
 
     ![image](https://github.com/user-attachments/assets/5c9f1920-23c2-441b-b05a-2ef167706343)
 
-10. After successful connection head over to the Project settings page and change the production branch from **master** to **main** and save the configurations.
+10. After successful connection head over to the Project settings page and change the production branch from **master** to **main** and click on save the configuration by scrolling below.
 
     ![image](https://github.com/user-attachments/assets/c57d93ae-bb7c-4158-b1b9-fba60116e5f3)
 
 11. Now, you should be able to see the code from the **main** branch. If not do the following:  
     
-    a. In the ‘Git Actions’ tab from the left side, click on the “Pull from…” option.
+    a. In the ‘Git Actions’ tab from the left side, click on the **“Pull from…”** option.
 
     ![image](https://github.com/user-attachments/assets/b4f6ab7e-21bf-48ba-9934-07e8e0596334)
 
-    b. Select the “Pull From Production” option and click on the Confirm button.
+    b. Select the **“Pull From Production”** option and click on the Confirm button.
 
     ![image](https://github.com/user-attachments/assets/7a2a5461-4462-4b16-9154-4afe785d27cb)
 
@@ -134,7 +134,7 @@ To sync this changes in forked repository from the main repository, make sure to
 
     ![image](https://github.com/user-attachments/assets/485d7542-4ec5-4932-885f-cc696b072b7f)
 
-4. If in some case **Pull from Production** doesn’t permits head over to git actions and click on pull from option which will open a popup named Pull from Production and confirm it.
+4. If in some case **Pull from Production** doesn’t permits head over to git actions and click on **Pull from...** option which will open a popup which shows **"Pull from Production"** and confirm it.
 
     ![image](https://github.com/user-attachments/assets/b4f6ab7e-21bf-48ba-9934-07e8e0596334)
 
