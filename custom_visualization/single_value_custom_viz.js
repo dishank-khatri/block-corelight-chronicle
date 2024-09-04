@@ -85,7 +85,7 @@
       }
 
       const arrowIcon = percentage > 0 ? '➚' : percentage === 0 ? '' : '➘';
-      percentage = percentage + '%';
+      percentage = (count_of_event1 == 0)?'N/A':percentage+'%';
 
       // Define color for count and line chart
       const color_for_count_and_line = '#262D33';
