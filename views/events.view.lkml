@@ -31786,6 +31786,40 @@ view: events {
     html: <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/link.svg" width="15" height="15" alt="link" /> ;;
   }
 
+  #Security Posture - Attack Count
+  dimension: attack_type {
+    type: string
+    sql: REGEXP_EXTRACT(${events__security_result.description}, r'^(?P<attack_type>[^\s]+)') ;;
+  }
+
+  #Security Posture - Avg Alerts Per Indicator
+  measure: average_alerts_per_indicator {
+    type: number
+    sql: CASE
+            WHEN ${events__about__labels__indicator.count_distinct_of_value} > 0 THEN ROUND((${metadata_id_count} / ${events__about__labels__indicator.count_distinct_of_value}), 2)
+            ELSE 0
+         END;;
+  }
+
+  #Security Posture - Avg Alerts Per Source IP
+  measure: average_alerts_per_source_ip {
+    type: number
+    sql: CASE
+            WHEN COUNT(DISTINCT ${events__principal__ip.events__principal__ip}) > 0 THEN ROUND((${metadata_id_count} / COUNT(DISTINCT ${events__principal__ip.events__principal__ip})), 2)
+            ELSE 0
+         END;;
+  }
+
+  #Security Posture - Threat Intel
+  measure: threat_intel {
+    type: number
+    sql: ${metadata_id_count};;
+    link: {
+      label: "View Intel Dashboard"
+      url: "/dashboards/corelight-chronicle::security_workflows__intel"
+    }
+  }
+
   # ----- Sets of fields for drilling ------
   set: detail {
     fields: [
@@ -55183,6 +55217,10 @@ view: events__about__labels__indicator {
     type: string
     sql: ${TABLE}.value ;;
   }
+  measure: count_distinct_of_value {
+    type: count_distinct
+    sql: ${value} ;;
+  }
 }
 #intel
 view: events__about__labels__seen__where {
@@ -55436,7 +55474,25 @@ view: events__about__labels__uid__only {
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
     }
   }
+  #Security Posture - Suricata Alerts
+  measure: suricata_alerts {
+    type: count_distinct
+    sql: ${TABLE}.value;;
+    link: {
+      label: "View Suricata Dashboard"
+      url: "/dashboards/corelight-chronicle::suricata_ids_alert_overview"
+    }
+  }
 
+  #Security Posture - Notices
+  measure: notices {
+    type: count_distinct
+    sql: ${TABLE}.value;;
+    link: {
+      label: "View Notices Dashboard"
+      url: "/dashboards/corelight-chronicle::notices"
+    }
+  }
 }
 view: events__about__labels__fuid__only {
   dimension: key {
