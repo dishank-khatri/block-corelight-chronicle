@@ -284,9 +284,20 @@
     filters:
       events.product_event_type: vpn
       events__about__labels__vpn__type__filter.value: "-NULL"
+      events.target__application: spicy%
     sorts: [events.orig_bytes_sum desc]
     limit: 5000
     column_limit: 50
+    dynamic_fields:
+    - category: table_calculation
+      expression: "((${events.orig_bytes_sum}+${events.resp_bytes_sum}) / 1024) /\
+        \ 1000"
+      label: Gigabytes
+      value_format:
+      value_format_name:
+      _kind_hint: measure
+      table_calculation: gigabytes
+      _type_hint: number
     show_view_names: false
     show_row_numbers: true
     transpose: false
@@ -322,6 +333,10 @@
         is_active: false
     defaults_version: 1
     hidden_pivots: {}
+    column_order: ["$$$_row_numbers_$$$", events__principal__ip.events__principal__ip,
+      events__target__ip.events__target__ip, events.target__port, events.protocol_string,
+      events__target__ip_geo_artifact.location__country_or_region, events.target__application,
+      events.resp_bytes_sum, events.orig_bytes_sum, gigabytes, events.gigabyte_count]
     listen:
       Time Range: events.event_timestamp_time
       Corelight Sensor: events.observer__hostname

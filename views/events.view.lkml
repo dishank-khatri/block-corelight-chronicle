@@ -31820,6 +31820,16 @@ view: events {
     }
   }
 
+  #Security Posture - SMB v1 Connections
+  dimension: smb_version {
+    type: string
+    sql: CASE
+          WHEN ${target__port} = 139 THEN 'SMBv1'
+          WHEN ${target__port} = 445 THEN 'SMBv2_or_SMBv3'
+          ELSE 'Unknown'
+         END;;
+  }
+
   # ----- Sets of fields for drilling ------
   set: detail {
     fields: [

@@ -379,7 +379,7 @@
       Namespace: events.observer__namespace
     row: 34
     col: 0
-    width: 8
+    width: 6
     height: 3
   - title: Telnet Sessions
     name: Telnet Sessions
@@ -420,8 +420,8 @@
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
     row: 34
-    col: 8
-    width: 8
+    col: 12
+    width: 6
     height: 3
   - name: ''
     type: text
@@ -484,8 +484,8 @@
       Global Time Restriction: events.event_timestamp_time
       Namespace: events.observer__namespace
     row: 34
-    col: 16
-    width: 8
+    col: 18
+    width: 6
     height: 3
   - title: Top Unencrypted Protocols Used
     name: Top Unencrypted Protocols Used
@@ -2117,6 +2117,51 @@
     col: 0
     width: 5
     height: 4
+  - title: SMB v1 Connections
+    name: SMB v1 Connections
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [events.formatted_metadata_id_count]
+    filters:
+      events.metadata__product_event_type: '"smb_mapping","smb_files"'
+      events.smb_version: SMBv1
+    limit: 500
+    column_limit: 50
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    show_view_names: false
+    show_row_numbers: true
+    transpose: false
+    truncate_text: true
+    hide_totals: false
+    hide_row_totals: false
+    size_to_fit: true
+    table_theme: white
+    limit_displayed_rows: false
+    header_text_alignment: left
+    header_font_size: 12
+    rows_font_size: 12
+    defaults_version: 1
+    hidden_pivots: {}
+    note_state: collapsed
+    note_display: above
+    note_text: SMB v1 Connections
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+      Namespace: events.observer__namespace
+    row: 34
+    col: 6
+    width: 6
+    height: 3
   filters:
   - name: Global Time Restriction
     title: Global Time Restriction
