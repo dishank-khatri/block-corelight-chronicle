@@ -290,8 +290,8 @@
     column_limit: 50
     dynamic_fields:
     - category: table_calculation
-      expression: "((${events.orig_bytes_sum}+${events.resp_bytes_sum}) / 1024) /\
-        \ 1000"
+      expression: "(((${events.orig_bytes_sum}+${events.resp_bytes_sum}) / 1024) /\
+        \ 1024) / 1024"
       label: Gigabytes
       value_format:
       value_format_name:
