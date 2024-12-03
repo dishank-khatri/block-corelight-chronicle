@@ -55500,7 +55500,7 @@ view: events__about__labels__uid__only {
     sql: ${TABLE}.value;;
     link: {
       label: "View Notices Dashboard"
-      url: "/dashboards/corelight-chronicle::notices"
+      url: "/dashboards/corelight-chronicle::notices?Time+Range=15+minute"
     }
   }
 }

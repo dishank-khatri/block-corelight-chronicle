@@ -1372,7 +1372,7 @@
     type: single_value
     fields: [count_of_events_target_ip]
     filters:
-      events.metadata__product_event_type: intel
+      events.metadata__product_event_type: '"suricata_corelight"'
     limit: 500
     column_limit: 50
     dynamic_fields:
@@ -1437,9 +1437,9 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 4
-    col: 5
-    width: 8
+    row: 2
+    col: 9
+    width: 4
     height: 2
   - title: Unique Source IPs
     name: Unique Source IPs
@@ -1448,7 +1448,7 @@
     type: single_value
     fields: [count_of_events_principal_ip]
     filters:
-      events.metadata__product_event_type: intel
+      events.metadata__product_event_type: '"suricata_corelight"'
     limit: 500
     column_limit: 50
     dynamic_fields:
@@ -1515,7 +1515,7 @@
       Namespace: events.observer__namespace
     row: 2
     col: 5
-    width: 8
+    width: 4
     height: 2
   - title: Attack Count
     name: Attack Count
@@ -1655,7 +1655,7 @@
       Namespace: events.observer__namespace
     row: 8
     col: 5
-    width: 8
+    width: 4
     height: 2
   - title: Meterpreter Count
     name: Meterpreter Count
@@ -1726,16 +1726,24 @@
     col: 9
     width: 4
     height: 2
-  - title: Total Alerts
-    name: Total Alerts
+  - title: Unique Note Count
+    name: Unique Note Count
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [events.metadata_id_count]
+    fields: [count_of_description]
     filters:
-      events.metadata__product_event_type: intel
+      events.metadata__product_event_type: notice
     limit: 500
     column_limit: 50
+    dynamic_fields:
+    - _kind_hint: measure
+      _type_hint: number
+      based_on: events__security_result.description
+      expression: ''
+      label: Count of Description
+      measure: count_of_description
+      type: count_distinct
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -1790,8 +1798,8 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 10
-    col: 5
+    row: 8
+    col: 9
     width: 4
     height: 2
   - title: Unique Indicators
@@ -1866,9 +1874,9 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 12
+    row: 10
     col: 5
-    width: 4
+    width: 8
     height: 2
   - title: Avg Alerts Per Source IP
     name: Avg Alerts Per Source IP
@@ -2002,8 +2010,8 @@
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
       Namespace: events.observer__namespace
-    row: 10
-    col: 9
+    row: 12
+    col: 5
     width: 4
     height: 2
   - name: " (6)"
@@ -2091,8 +2099,7 @@
     type: single_value
     fields: [events.threat_intel]
     filters:
-      events.metadata__product_event_type: notice
-      events__security_result.description: Intel%
+      events.metadata__product_event_type: intel
     limit: 500
     column_limit: 50
     custom_color_enabled: true
@@ -2162,6 +2169,42 @@
     col: 6
     width: 6
     height: 3
+  - title: Unique Signatures
+    name: Unique Signatures
+    model: corelight-chronicle
+    explore: events
+    type: single_value
+    fields: [count_of_rule_id]
+    filters:
+      events.metadata__product_event_type: '"suricata_corelight"'
+    limit: 500
+    column_limit: 50
+    dynamic_fields:
+    - _kind_hint: measure
+      _type_hint: number
+      based_on: events__security_result.rule_id
+      expression: ''
+      label: Count of Rule ID
+      measure: count_of_rule_id
+      type: count_distinct
+    custom_color_enabled: true
+    show_single_value_title: true
+    show_comparison: false
+    comparison_type: value
+    comparison_reverse_colors: false
+    show_comparison_label: true
+    enable_conditional_formatting: false
+    conditional_formatting_include_totals: false
+    conditional_formatting_include_nulls: false
+    defaults_version: 1
+    listen:
+      Global Time Restriction: events.event_timestamp_time
+      Sensor: events.observer__hostname
+      Namespace: events.observer__namespace
+    row: 4
+    col: 5
+    width: 8
+    height: 2
   filters:
   - name: Global Time Restriction
     title: Global Time Restriction
