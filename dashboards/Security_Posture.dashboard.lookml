@@ -1144,8 +1144,8 @@
     col: 18
     width: 6
     height: 2
-  - title: Suricata Alerts - Line Chart
-    name: Suricata Alerts - Line Chart
+  - title: Suricata Alerts Over Time
+    name: Suricata Alerts Over Time
     model: corelight-chronicle
     explore: events
     type: looker_area
@@ -1159,7 +1159,7 @@
     dynamic_fields:
     - category: table_calculation
       expression: coalesce(${events.metadata_id_count}, 0)
-      label: detections
+      label: Detections
       value_format:
       value_format_name:
       _kind_hint: measure
@@ -1204,6 +1204,7 @@
     series_labels:
       events.metadata_id_count: notealerts
       notealerts: Detections
+      detections: Detections
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -1223,8 +1224,8 @@
     col: 13
     width: 11
     height: 4
-  - title: Notices - Line Chart
-    name: Notices - Line Chart
+  - title: Unique Notes Over Time
+    name: Unique Notes Over Time
     model: corelight-chronicle
     explore: events
     type: looker_area
@@ -1246,11 +1247,11 @@
       type: count_distinct
     - category: table_calculation
       expression: coalesce(${count_of_description}, 0)
-      label: Unique Note
+      label: Unique Notes
       value_format:
       value_format_name:
       _kind_hint: measure
-      table_calculation: unique_note
+      table_calculation: unique_notes
       _type_hint: number
     x_axis_gridlines: false
     y_axis_gridlines: true
@@ -1279,8 +1280,8 @@
     show_totals_labels: false
     show_silhouette: false
     totals_color: "#808080"
-    y_axes: [{label: Unique Note, orientation: left, series: [{axisId: uniquenote,
-            id: uniquenote, name: uniquenote}], showLabels: true, showValues: true,
+    y_axes: [{label: Unique Notes, orientation: left, series: [{axisId: unique_notes,
+            id: unique_notes, name: Unique Notes}], showLabels: true, showValues: true,
         unpinAxis: false, tickDensity: default, tickDensityCustom: 5, type: linear}]
     x_axis_label: Time
     x_axis_zoom: true
@@ -1298,8 +1299,8 @@
     col: 13
     width: 11
     height: 4
-  - title: Threat Intel - Line Chart
-    name: Threat Intel - Line Chart
+  - title: Intel Alerts Over Time
+    name: Intel Alerts Over Time
     model: corelight-chronicle
     explore: events
     type: looker_area
@@ -1793,7 +1794,7 @@
     defaults_version: 1
     note_state: collapsed
     note_display: above
-    note_text: Total Alerts
+    note_text: Unique Note Count
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -2083,7 +2084,7 @@
     defaults_version: 1
     note_state: collapsed
     note_display: hover
-    note_text: Messages excluding Intel
+    note_text: Messages Excluding Intel
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
@@ -2197,6 +2198,9 @@
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
     defaults_version: 1
+    note_state: collapsed
+    note_display: above
+    note_text: Unique Signatures
     listen:
       Global Time Restriction: events.event_timestamp_time
       Sensor: events.observer__hostname
