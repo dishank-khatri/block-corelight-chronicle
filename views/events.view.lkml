@@ -31830,6 +31830,26 @@ view: events {
          END;;
   }
 
+  #Security Posture - Suricata Alerts
+  measure: suricata_alerts {
+    type: number
+    sql: ${metadata_id_count};;
+    link: {
+      label: "View Suricata Dashboard"
+      url: "/dashboards/corelight-chronicle::suricata_ids_alert_overview"
+    }
+  }
+
+  #Security Posture - Notices
+  measure: notices {
+    type: number
+    sql: ${metadata_id_count};;
+    link: {
+      label: "View Notices Dashboard"
+      url: "/dashboards/corelight-chronicle::notices?Time+Range=15+minute"
+    }
+  }
+
   # ----- Sets of fields for drilling ------
   set: detail {
     fields: [
@@ -55482,25 +55502,6 @@ view: events__about__labels__uid__only {
     link: {
       label: "View in Chronicle"
       url: "@{CHRONICLE_URL}/search?query=metadata.product_event_type=\"{{ events.metadata__product_event_type }}\" AND metadata.vendor_name=\"{{events.metadata__vendor_name}}\" {% if _filters['events.observer__hostname'] %} AND observer.hostname=\"{{ _filters['events.observer__hostname'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}{% if _filters['events.observer__namespace'] %} AND observer.namespace=\"{{ _filters['events.observer__namespace'] | replace:'\"','' | url_encode }}\"{% else %}{% endif %}&startTime={{ events.lower_date }}&endTime={{ events.upper_date }}"
-    }
-  }
-  #Security Posture - Suricata Alerts
-  measure: suricata_alerts {
-    type: count_distinct
-    sql: ${TABLE}.value;;
-    link: {
-      label: "View Suricata Dashboard"
-      url: "/dashboards/corelight-chronicle::suricata_ids_alert_overview"
-    }
-  }
-
-  #Security Posture - Notices
-  measure: notices {
-    type: count_distinct
-    sql: ${TABLE}.value;;
-    link: {
-      label: "View Notices Dashboard"
-      url: "/dashboards/corelight-chronicle::notices?Time+Range=15+minute"
     }
   }
 }

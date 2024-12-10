@@ -1159,11 +1159,11 @@
     dynamic_fields:
     - category: table_calculation
       expression: coalesce(${events.metadata_id_count}, 0)
-      label: Detections
+      label: Suricata Alerts
       value_format:
       value_format_name:
       _kind_hint: measure
-      table_calculation: detections
+      table_calculation: suricata_alerts
       _type_hint: number
     x_axis_gridlines: false
     y_axis_gridlines: true
@@ -1192,8 +1192,8 @@
     show_totals_labels: false
     show_silhouette: false
     totals_color: "#808080"
-    y_axes: [{label: Detections, orientation: left, series: [{axisId: notealerts,
-            id: notealerts, name: Note Alerts}], showLabels: true, showValues: true,
+    y_axes: [{label: Suricata Alerts, orientation: left, series: [{axisId: suricata_alerts,
+            id: suricata_alerts, name: Suricata Alerts}], showLabels: true, showValues: true,
         unpinAxis: false, tickDensity: default, tickDensityCustom: 5, type: linear}]
     x_axis_label: Time
     x_axis_zoom: true
@@ -1224,34 +1224,35 @@
     col: 13
     width: 11
     height: 4
-  - title: Unique Notes Over Time
-    name: Unique Notes Over Time
+  - title: Notices Over Time
+    name: Notices Over Time
     model: corelight-chronicle
     explore: events
     type: looker_area
-    fields: [events.event_time_hour, count_of_description]
-    fill_fields: [events.event_time_hour]
+    fields: [events.event_timestamp_hour, events.metadata_id_count]
+    fill_fields: [events.event_timestamp_hour]
     filters:
       events.metadata__product_event_type: notice
       events__security_result.description: "-Intel%"
-    sorts: [events.event_time_hour desc]
+      events__principal__ip.events__principal__ip: "-NULL"
+    sorts: [events.event_timestamp_hour desc]
     limit: 500
     column_limit: 50
     dynamic_fields:
     - _kind_hint: measure
       _type_hint: number
-      based_on: events__security_result.description
+      based_on: events.metadata__id
       expression: ''
-      label: Count of Description
-      measure: count_of_description
+      label: Count of Metadata ID
+      measure: count_of_metadata_id
       type: count_distinct
     - category: table_calculation
-      expression: coalesce(${count_of_description}, 0)
-      label: Unique Notes
+      expression: coalesce(${events.metadata_id_count}, 0)
+      label: Notices
       value_format:
       value_format_name:
       _kind_hint: measure
-      table_calculation: unique_notes
+      table_calculation: notices
       _type_hint: number
     x_axis_gridlines: false
     y_axis_gridlines: true
@@ -1280,15 +1281,15 @@
     show_totals_labels: false
     show_silhouette: false
     totals_color: "#808080"
-    y_axes: [{label: Unique Notes, orientation: left, series: [{axisId: unique_notes,
-            id: unique_notes, name: Unique Notes}], showLabels: true, showValues: true,
-        unpinAxis: false, tickDensity: default, tickDensityCustom: 5, type: linear}]
+    y_axes: [{label: Notices, orientation: left, series: [{axisId: notices, id: notices,
+            name: Notices}], showLabels: true, showValues: true, unpinAxis: false,
+        tickDensity: default, tickDensityCustom: 5, type: linear}]
     x_axis_label: Time
     x_axis_zoom: true
     y_axis_zoom: true
     series_colors:
       uniquenote: "#7CB342"
-    hidden_fields: [count_of_description]
+    hidden_fields: [events.metadata_id_count]
     hidden_pivots: {}
     defaults_version: 1
     listen:
@@ -1304,11 +1305,11 @@
     model: corelight-chronicle
     explore: events
     type: looker_area
-    fields: [events.event_time_hour, events.metadata_id_count]
-    fill_fields: [events.event_time_hour]
+    fields: [events.metadata_id_count, events.event_timestamp_hour]
+    fill_fields: [events.event_timestamp_hour]
     filters:
       events.metadata__product_event_type: intel
-    sorts: [events.event_time_hour desc]
+    sorts: [events.event_timestamp_hour desc]
     limit: 500
     column_limit: 50
     dynamic_fields:
@@ -2032,7 +2033,7 @@
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [events__about__labels__uid__only.suricata_alerts]
+    fields: [events.suricata_alerts]
     filters:
       events.metadata__product_event_type: '"suricata_corelight"'
     limit: 500
@@ -2064,7 +2065,7 @@
     model: corelight-chronicle
     explore: events
     type: single_value
-    fields: [events__about__labels__uid__only.notices]
+    fields: [events.notices]
     filters:
       events.metadata__product_event_type: notice
       events__security_result.description: "-Intel%"
