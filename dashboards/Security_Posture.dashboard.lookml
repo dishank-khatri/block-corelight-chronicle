@@ -426,6 +426,7 @@
   - name: ''
     type: text
     title_text: ''
+    subtitle_text: ''
     body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">Encrypted
       Traffic Hygiene</h4>
 
@@ -437,6 +438,7 @@
   - name: " (2)"
     type: text
     title_text: ''
+    subtitle_text: ''
     body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">Unencrypted
       Traffic Hygiene - Indicators</h4>
 
@@ -601,10 +603,6 @@
     sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
-    hidden_fields: []
-    hidden_points_if_no: []
-    series_labels: {}
-    show_view_names: false
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -614,6 +612,7 @@
     enable_conditional_formatting: false
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
+    show_view_names: false
     show_row_numbers: true
     transpose: false
     truncate_text: true
@@ -701,10 +700,6 @@
     sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
-    hidden_fields: []
-    hidden_points_if_no: []
-    series_labels: {}
-    show_view_names: false
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -714,6 +709,7 @@
     enable_conditional_formatting: false
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
+    show_view_names: false
     defaults_version: 0
     listen:
       Sensor: events.observer__hostname
@@ -790,6 +786,7 @@
   - name: " (3)"
     type: text
     title_text: ''
+    subtitle_text: ''
     body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">DNS
       Hygiene</h4>
 
@@ -801,6 +798,7 @@
   - name: " (4)"
     type: text
     title_text: ''
+    subtitle_text: ''
     body_text: '<h4 style="font-size:22px; margin-top:30px; font-style:normal; text-align:left;">Remote
       Management Hygiene</h4>
 
@@ -894,10 +892,6 @@
     sorts: [events.event_timestamp_date desc]
     limit: 500
     column_limit: 50
-    hidden_fields: []
-    hidden_points_if_no: []
-    series_labels: {}
-    show_view_names: true
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
